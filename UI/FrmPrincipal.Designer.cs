@@ -90,20 +90,23 @@
             // MenuNuevaVenta
             // 
             this.MenuNuevaVenta.Name = "MenuNuevaVenta";
-            this.MenuNuevaVenta.Size = new System.Drawing.Size(239, 38);
+            this.MenuNuevaVenta.Size = new System.Drawing.Size(270, 38);
             this.MenuNuevaVenta.Text = "Nueva Venta";
+            this.MenuNuevaVenta.Click += new System.EventHandler(this.MenuNuevaVenta_Click);
             // 
             // MenuPostVenta
             // 
             this.MenuPostVenta.Name = "MenuPostVenta";
-            this.MenuPostVenta.Size = new System.Drawing.Size(239, 38);
+            this.MenuPostVenta.Size = new System.Drawing.Size(270, 38);
             this.MenuPostVenta.Text = "Post Venta";
+            this.MenuPostVenta.Click += new System.EventHandler(this.MenuPostVenta_Click);
             // 
             // MenuClientes
             // 
             this.MenuClientes.Name = "MenuClientes";
-            this.MenuClientes.Size = new System.Drawing.Size(239, 38);
+            this.MenuClientes.Size = new System.Drawing.Size(270, 38);
             this.MenuClientes.Text = "Clientes";
+            this.MenuClientes.Click += new System.EventHandler(this.MenuClientes_Click);
             // 
             // MenuCompras
             // 
@@ -118,14 +121,16 @@
             // MenuPedidos
             // 
             this.MenuPedidos.Name = "MenuPedidos";
-            this.MenuPedidos.Size = new System.Drawing.Size(215, 38);
+            this.MenuPedidos.Size = new System.Drawing.Size(270, 38);
             this.MenuPedidos.Text = "Pedidos";
+            this.MenuPedidos.Click += new System.EventHandler(this.MenuPedidos_Click);
             // 
             // MenuRecepcion
             // 
             this.MenuRecepcion.Name = "MenuRecepcion";
-            this.MenuRecepcion.Size = new System.Drawing.Size(215, 38);
+            this.MenuRecepcion.Size = new System.Drawing.Size(270, 38);
             this.MenuRecepcion.Text = "Recepción";
+            this.MenuRecepcion.Click += new System.EventHandler(this.MenuRecepcion_Click);
             // 
             // MenuPagos
             // 
@@ -140,14 +145,16 @@
             // MenuRegistrarPago
             // 
             this.MenuRegistrarPago.Name = "MenuRegistrarPago";
-            this.MenuRegistrarPago.Size = new System.Drawing.Size(255, 38);
+            this.MenuRegistrarPago.Size = new System.Drawing.Size(270, 38);
             this.MenuRegistrarPago.Text = "Registrar Pago";
+            this.MenuRegistrarPago.Click += new System.EventHandler(this.MenuRegistrarPago_Click);
             // 
             // MenuConciliacion
             // 
             this.MenuConciliacion.Name = "MenuConciliacion";
-            this.MenuConciliacion.Size = new System.Drawing.Size(255, 38);
+            this.MenuConciliacion.Size = new System.Drawing.Size(270, 38);
             this.MenuConciliacion.Text = "Conciliación";
+            this.MenuConciliacion.Click += new System.EventHandler(this.MenuConciliacion_Click);
             // 
             // MenuStock
             // 
@@ -162,14 +169,16 @@
             // MenuAjusteStock
             // 
             this.MenuAjusteStock.Name = "MenuAjusteStock";
-            this.MenuAjusteStock.Size = new System.Drawing.Size(264, 38);
+            this.MenuAjusteStock.Size = new System.Drawing.Size(270, 38);
             this.MenuAjusteStock.Text = "Ajuste de Stock";
+            this.MenuAjusteStock.Click += new System.EventHandler(this.MenuAjusteStock_Click);
             // 
             // MenuAlertas
             // 
             this.MenuAlertas.Name = "MenuAlertas";
-            this.MenuAlertas.Size = new System.Drawing.Size(264, 38);
+            this.MenuAlertas.Size = new System.Drawing.Size(270, 38);
             this.MenuAlertas.Text = "Alertas";
+            this.MenuAlertas.Click += new System.EventHandler(this.MenuAlertas_Click);
             // 
             // MenuFidelizacion
             // 
@@ -183,8 +192,9 @@
             // MenuCupones
             // 
             this.MenuCupones.Name = "MenuCupones";
-            this.MenuCupones.Size = new System.Drawing.Size(201, 38);
+            this.MenuCupones.Size = new System.Drawing.Size(270, 38);
             this.MenuCupones.Text = "Cupones";
+            this.MenuCupones.Click += new System.EventHandler(this.MenuCupones_Click);
             // 
             // MenuReportes
             // 
@@ -198,8 +208,9 @@
             // MenuDashboard
             // 
             this.MenuDashboard.Name = "MenuDashboard";
-            this.MenuDashboard.Size = new System.Drawing.Size(221, 38);
+            this.MenuDashboard.Size = new System.Drawing.Size(270, 38);
             this.MenuDashboard.Text = "Dashboard";
+            this.MenuDashboard.Click += new System.EventHandler(this.MenuDashboard_Click);
             // 
             // MenuAdministracion
             // 
@@ -215,20 +226,23 @@
             // MenuUsuarios
             // 
             this.MenuUsuarios.Name = "MenuUsuarios";
-            this.MenuUsuarios.Size = new System.Drawing.Size(239, 38);
+            this.MenuUsuarios.Size = new System.Drawing.Size(270, 38);
             this.MenuUsuarios.Text = "Usuarios";
+            this.MenuUsuarios.Click += new System.EventHandler(this.MenuUsuarios_Click);
             // 
             // MenuProductos
             // 
             this.MenuProductos.Name = "MenuProductos";
-            this.MenuProductos.Size = new System.Drawing.Size(239, 38);
+            this.MenuProductos.Size = new System.Drawing.Size(270, 38);
             this.MenuProductos.Text = "Productos";
+            this.MenuProductos.Click += new System.EventHandler(this.MenuProductos_Click);
             // 
             // MenuProveedores
             // 
             this.MenuProveedores.Name = "MenuProveedores";
-            this.MenuProveedores.Size = new System.Drawing.Size(239, 38);
+            this.MenuProveedores.Size = new System.Drawing.Size(270, 38);
             this.MenuProveedores.Text = "Proveedores";
+            this.MenuProveedores.Click += new System.EventHandler(this.MenuProveedores_Click);
             // 
             // MenuSesión
             // 
@@ -247,6 +261,7 @@
             this.MenuCerrarSesion.Name = "MenuCerrarSesion";
             this.MenuCerrarSesion.Size = new System.Drawing.Size(314, 38);
             this.MenuCerrarSesion.Text = "Cerrar Sesión";
+            this.MenuCerrarSesion.Click += new System.EventHandler(this.MenuCerrarSesion_Click);
             // 
             // MenuSalirAplicacion
             // 
@@ -254,12 +269,14 @@
             this.MenuSalirAplicacion.Name = "MenuSalirAplicacion";
             this.MenuSalirAplicacion.Size = new System.Drawing.Size(314, 38);
             this.MenuSalirAplicacion.Text = "Salir de la Aplicación";
+            this.MenuSalirAplicacion.Click += new System.EventHandler(this.MenuSalirAplicacion_Click);
             // 
             // FrmPrincipal
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 22F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1402, 800);
+            this.ControlBox = false;
             this.Controls.Add(this.Menu_strip);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.IsMdiContainer = true;
@@ -268,6 +285,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Babilonia Calzados";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.Load += new System.EventHandler(this.FrmPrincipal_Load);
             this.Menu_strip.ResumeLayout(false);
             this.Menu_strip.PerformLayout();
             this.ResumeLayout(false);
