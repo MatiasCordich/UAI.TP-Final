@@ -1,0 +1,21 @@
+# Visual Studio archivos temporales
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+ 
+# Carpetas de compilación
+bin/
+obj/
+ 
+# Archivos de datos XML (no subir datos encriptados al repo)
+datos/
+auditoria/
+ 
+# NuGet
+*.nupkg
+packages/
+ 
+# Logs
+*.log

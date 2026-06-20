@@ -95,7 +95,7 @@ namespace BLL.SECURITY
         }
 
         /* -----------------------------------------------------------------------------------------------------
-         * Función: GenerarContrasenaAutomatica
+         * Función: GenerarClaveAutomatica
          * Descripción: Genera una contraseña aleatoria segura para el alta de un nuevo usuario.
          *              La contraseña cumple con los requisitos de seguridad básicos.
          * Retorna: Contraseña en texto plano (solo se muestra una vez al administrador).
