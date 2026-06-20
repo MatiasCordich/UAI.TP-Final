@@ -3,8 +3,6 @@ using ENTITY;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DAL.DAO
 {
@@ -16,13 +14,28 @@ namespace DAL.DAO
      -----------------------------------------------------------------------------------------------------*/
     public class UsuarioDAO
     {
+        /* Instancia del ORM de usuarios para acceder al XML */
         private UsuarioORM orm = new UsuarioORM();
+
+        /* Instancia del ORM de roles para cargar el rol del usuario */
+        private RolORM rolOrm = new RolORM();
 
         public List<Usuario> GetAll()
         {
             try
             {
-                return orm.ObtenerTodos();
+                /* Obtiene todos los usuarios activos del XML */
+                List<Usuario> usuarios = orm.ObtenerTodos().Where(u => u.Activo).ToList();
+
+                /* Carga el rol de cada usuario */
+                foreach (Usuario u in usuarios)
+                {
+                    u.Rol = rolOrm.ObtenerPorId(u.IdRol);
+                }
+
+                /* Devuelve la lista de usuarios*/
+                return usuarios;
+                    
             }
             catch (Exception ex)
             {
@@ -34,7 +47,17 @@ namespace DAL.DAO
         {
             try
             {
-                return orm.ObtenerPorId(id);
+                /* Busca el usuario por ID */
+                Usuario usuario = orm.ObtenerPorId(id);
+
+                /* Si no existe, devuelve null. */
+                if (usuario == null)
+                    return null;
+
+                /* Carga el rol del usuario */
+                usuario.Rol = rolOrm.ObtenerPorId(usuario.IdRol);
+
+                return usuario;
             }
             catch (Exception ex)
             {
@@ -47,8 +70,19 @@ namespace DAL.DAO
         {
             try
             {
-                return orm.ObtenerTodos()
-                          .FirstOrDefault(u => u.NombreUsuario == nombreUsuario && u.Activo);
+                /* Busca el usuario por nombre de usuario en el XML */
+                Usuario usuario = orm.ObtenerTodos()
+                             .FirstOrDefault(u => u.NombreUsuario == nombreUsuario && u.Activo);
+
+                /* Si no existe, devuelve null. */
+                if (usuario == null)
+                    return null;
+
+                /* Carga el rol del usuario */
+                RolORM rolOrm = new RolORM();
+                usuario.Rol = rolOrm.ObtenerPorId(usuario.IdRol);
+
+                return usuario;
             }
             catch (Exception ex)
             {
