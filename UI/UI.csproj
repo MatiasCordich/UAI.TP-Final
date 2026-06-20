@@ -144,6 +144,9 @@
     <Compile Include="Ventas\FrmPostVenta.Designer.cs">
       <DependentUpon>FrmPostVenta.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="FrmLogin.resx">
+      <DependentUpon>FrmLogin.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FrmPrincipal.resx">
       <DependentUpon>FrmPrincipal.cs</DependentUpon>
     </EmbeddedResource>
@@ -173,6 +176,10 @@
     <ProjectReference Include="..\BLL\BLL.csproj">
       <Project>{ee6523a1-f997-449d-bc08-19d0876a91ed}</Project>
       <Name>BLL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DAL\DAL.csproj">
+      <Project>{A0441098-550F-420B-8CC0-AB034D24E18F}</Project>
+      <Name>DAL</Name>
     </ProjectReference>
     <ProjectReference Include="..\ENTITY\ENTITY.csproj">
       <Project>{5e1a759a-0be0-4beb-9999-3d4ec4713f18}</Project>
