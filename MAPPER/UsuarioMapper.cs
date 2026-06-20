@@ -41,7 +41,7 @@ namespace MAPPER
                 new XElement("Nombre", entidad.Nombre),
                 new XElement("Apellido", entidad.Apellido),
                 new XElement("NombreUsuario", entidad.NombreUsuario),
-                new XElement("Contrasena", entidad.Clave),  // se guarda encriptada
+                new XElement("Clave", entidad.Clave),  // se guarda encriptada
                 new XElement("Activo", entidad.Activo),
                 new XElement("FechaAlta", entidad.FechaAlta)
             );
