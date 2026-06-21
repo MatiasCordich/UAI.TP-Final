@@ -80,6 +80,14 @@ namespace UI
                     /* Obtiene el usuario con LoginParcial para pasarlo al formulario */
                     Usuario usuario = authService.LoginParcial(txtUsuario.Text.Trim(), txtClave.Text);
 
+                    /* Informa al usuario por qué debe cambiar la clave */
+                    MessageBox.Show(
+                        "Su contraseña ha vencido o es la primera vez que ingresa.\n\n" +
+                        "Debe cambiar su contraseña para continuar.",
+                        "Cambio de contraseña requerido",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+
                     /* Abre el formulario de cambio de clave obligatorio */
                     FrmCambiarClave cambiarClave = new FrmCambiarClave(usuario);
                     cambiarClave.Show();
