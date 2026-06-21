@@ -28,7 +28,8 @@ namespace MAPPER
                 NombreUsuario = (string)nodo.Element("NombreUsuario"),
                 Clave = (string)nodo.Element("Clave"),  // llega encriptada del XML
                 Activo = (bool)nodo.Element("Activo"),
-                FechaAlta = (DateTime)nodo.Element("FechaAlta")
+                FechaAlta = (DateTime)nodo.Element("FechaAlta"),
+                IntentosFallidos = (int?)nodo.Element("IntentosFallidos") ?? 0
             };
         }
 
@@ -43,7 +44,8 @@ namespace MAPPER
                 new XElement("NombreUsuario", entidad.NombreUsuario),
                 new XElement("Clave", entidad.Clave),  // se guarda encriptada
                 new XElement("Activo", entidad.Activo),
-                new XElement("FechaAlta", entidad.FechaAlta)
+                new XElement("FechaAlta", entidad.FechaAlta),
+                new XElement("IntentosFallidos", entidad.IntentosFallidos)
             );
         }
     }
