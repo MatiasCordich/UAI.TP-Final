@@ -33,12 +33,12 @@ namespace BLL
          * Descripción: Obtiene todos los usuarios activos del sistema.
          * Retorna: lista de usuarios.
          -----------------------------------------------------------------------------------------------------*/
-        public List<Usuario> ListarUsuarios()
+        public List<Usuario> ListarUsuarios(string nombreUsuario = null, int? idRol = null, bool? activo = null)
         {
             try
             {
                 /* Obtiene todos los usuarios activos del XML */
-                return usuarioDAO.GetAll();
+                return usuarioDAO.GetFiltered(nombreUsuario, idRol, activo );
             }
             catch (Exception ex)
             {
@@ -86,10 +86,8 @@ namespace BLL
                 /* Ejecuta las validaciones de negocio centralizadas */
                 ValidarUsuario(usuario);
 
-                /* Verifica que el nombre de usuario no esté en uso */
-                Usuario existente = usuarioDAO.GetByUsername(usuario.NombreUsuario);
-                if (existente != null)
-                    throw new Exception("El nombre de usuario ya está en uso.");
+                /* Genera el nombre de usuario automáticamente */
+                usuario.NombreUsuario = GenerarNombreUsuario(usuario.Nombre, usuario.Apellido);
 
                 /* Genera la contraseña automática que el admin le comunicará al usuario */
                 string claveTemporal = authService.GenerarClaveAutomatica();
@@ -97,8 +95,7 @@ namespace BLL
                 /* Hashea la contraseña antes de guardarla en el XML */
                 usuario.Clave = EncryptService.HashClave(claveTemporal);
 
-                /* Setea el usuario como activo y registra la fecha de alta */
-                usuario.Activo = true;
+                /* Se registra la fecha de alta */
                 usuario.FechaAlta = DateTime.Now;
 
                 /* Guarda el usuario en el XML */
@@ -141,7 +138,8 @@ namespace BLL
                         throw new Exception("No se puede cambiar el rol del único Dueño activo del sistema.");
                 }
 
-                /* Actualiza los datos del usuario en el XML sin tocar la contraseña */
+                /* Actualiza los datos del usuario en el XML sin tocar la contraseña y el nombre. */
+                usuario.NombreUsuario = existente.NombreUsuario;
                 usuario.Clave = existente.Clave;
                 usuarioDAO.Update(usuario);
             }
@@ -216,6 +214,25 @@ namespace BLL
         }
 
         /* -----------------------------------------------------------------------------------------------------
+        * Función: PreVisualizarNombreUsuario
+        * Descripción: Método público para que la UI pueda previsualizar el nombre de usuario
+        *              mientras el admin escribe el nombre y apellido.
+        * Parámetros: nombre y apellido del usuario.
+        * Retorna: nombre de usuario generado o vacío si faltan datos.
+        -----------------------------------------------------------------------------------------------------*/
+        public string PreVisualizarNombreUsuario(string nombre, string apellido)
+        {
+            /* Valida que ambos campos tengan valor antes de generar */
+            if (string.IsNullOrEmpty(nombre) || string.IsNullOrEmpty(apellido))
+                return string.Empty;
+
+            /* Llama al método privado de generación */
+            return GenerarNombreUsuario(nombre, apellido);
+        }
+
+
+
+        /* -----------------------------------------------------------------------------------------------------
          * MÉTODOS PRIVADOS
          -----------------------------------------------------------------------------------------------------*/
         /* -----------------------------------------------------------------------------------------------------
@@ -234,14 +251,6 @@ namespace BLL
             if (string.IsNullOrEmpty(usuario.Apellido))
                 throw new Exception("El apellido es obligatorio.");
 
-            /* NombreUsuario obligatorio */
-            if (string.IsNullOrEmpty(usuario.NombreUsuario))
-                throw new Exception("El nombre de usuario es obligatorio.");
-
-            /* NombreUsuario sin espacios ni caracteres especiales */
-            if (!Regex.IsMatch(usuario.NombreUsuario, @"^[a-zA-Z0-9_]+$"))
-                throw new Exception("El nombre de usuario solo puede contener letras, números y guión bajo.");
-
             /* Rol obligatorio */
             if (usuario.IdRol <= 0)
                 throw new Exception("Debe asignar un rol al usuario.");
@@ -257,7 +266,7 @@ namespace BLL
         private bool EsUnicoDueno(int idUsuario)
         {
             /* Obtiene todos los usuarios activos */
-            List<Usuario> todos = usuarioDAO.GetAll();
+            List<Usuario> todos = usuarioDAO.GetFiltered(idRol: IdRolDueno, activo: true);
 
             /* Cuenta cuántos Dueños activos hay excluyendo al usuario en cuestión. */
             int cantidadDuenos = 0;
@@ -269,6 +278,48 @@ namespace BLL
 
             /* Si no hay otros Dueños activos, este es el único */
             return cantidadDuenos == 0;
+        }
+
+        /* -----------------------------------------------------------------------------------------------------
+         * Función: GenerarNombreUsuario
+         * Descripción: Genera automáticamente el nombre de usuario.
+         * Parámetros: nombre y apellido del usuario.
+         * Retorna: nombre de usuario único generado.
+         -----------------------------------------------------------------------------------------------------*/
+        private string GenerarNombreUsuario(string nombre, string apellido)
+        {
+            /* Toma la primera letra del nombre en mayúscula */
+            string primerLetraNombre = nombre.Trim().Substring(0, 1).ToUpper();
+
+            /* Toma solo el primer apellido si hay más de uno */
+            string primerApellido = apellido.Trim().Split(' ')[0].ToUpper();
+
+            /* Combina para formar el nombre de usuario base */
+            string nombreUsuarioBase = primerLetraNombre + primerApellido;
+
+            /* Obtiene todos los usuarios para verificar duplicados */
+            List<Usuario> todos = usuarioDAO.GetFiltered();
+
+            /* Verifica si el nombre base ya existe */
+            bool existe = todos.Exists(u => u.NombreUsuario == nombreUsuarioBase);
+
+            /* Si no existe lo devuelve directamente */
+            if (!existe)
+                return nombreUsuarioBase;
+
+            /* Si existe busca un número correlativo disponible */
+            int numero = 1;
+            string nombreUsuarioFinal;
+            do
+            {
+                /* Formatea el número con dos dígitos (01, 02, etc.) */
+                nombreUsuarioFinal = nombreUsuarioBase + numero.ToString("D2");
+                numero++;
+            }
+            while (todos.Exists(u => u.NombreUsuario == nombreUsuarioFinal));
+
+            /* Devuelve el nombre de usuario con el número correlativo */
+            return nombreUsuarioFinal;
         }
     }
 }
