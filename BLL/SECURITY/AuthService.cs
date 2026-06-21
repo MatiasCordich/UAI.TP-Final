@@ -24,11 +24,14 @@ namespace BLL.SECURITY
         /* Se instancia el DAO de usuarios. */
         private UsuarioDAO usuarioDAO = new UsuarioDAO();
 
-        /* Intentos máximos antes de bloquear. */
+        /* Intentos máximos antes de bloquear (parametrizable). */
         private const int MaxIntentosFallidos = 3;
 
-        /* Días de vigencia de la contraseña. */
+        /* Días de vigencia de la contraseña (parametrizable). */
         private const int DiasVigenciaContrasena = 90;
+
+        /* ID del usuario admin inicial que nunca se bloquea */
+        private const int IdUsuarioAdmin = 1;
 
         /* Usuario actualmente logueado en el sistema */
         public static Usuario UsuarioActual { get; private set; }
@@ -37,7 +40,6 @@ namespace BLL.SECURITY
          * Función: Login
          * Descripción: Identifica y autentica al usuario en el sistema.
          *              Verifica que el usuario exista, no esté bloqueado y la contraseña sea correcta.
-         *              Si es el primer ingreso, obliga a cambiar la contraseña.
          * Parámetros: nombre de usuario y contraseña en texto plano.
          * Retorna: el usuario autenticado.
          -----------------------------------------------------------------------------------------------------*/
@@ -68,14 +70,14 @@ namespace BLL.SECURITY
                     throw new Exception("Contraseña incorrecta.");
                 }
 
-                /* Paso 6: Se resetea los intentos fallidos al ingresar correctamente */
+                /* Paso 6: Se resetean los intentos fallidos al ingresar correctamente */
                 ResetearIntentosFallidos(usuario);
 
                 /* Paso 7: Se verifica si la contraseña está vencida */
                 if (ClaveVencida(usuario))
                     throw new Exception("La contraseña ha vencido. Debe cambiarla para continuar.");
 
-                /* Paso 8: Se buarda el usuario actual en sesión */
+                /* Paso 8: Se guarda el usuario actual en sesión */
                 UsuarioActual = usuario;
                 return usuario;
             }
@@ -97,7 +99,6 @@ namespace BLL.SECURITY
         /* -----------------------------------------------------------------------------------------------------
          * Función: GenerarClaveAutomatica
          * Descripción: Genera una contraseña aleatoria segura para el alta de un nuevo usuario.
-         *              La contraseña cumple con los requisitos de seguridad básicos.
          * Retorna: Contraseña en texto plano (solo se muestra una vez al administrador).
          -----------------------------------------------------------------------------------------------------*/
         public string GenerarClaveAutomatica()
@@ -110,21 +111,20 @@ namespace BLL.SECURITY
                 const string numeros = "0123456789";
                 const string simbolos = "!@#$%";
 
-                /* Se instancia el objeto para rondomizar la contrasenña. */
+                /* Se instancia el objeto para randomizar la contraseña. */
                 Random rnd = new Random();
 
-                /* Variable que guarda la contraseña autogenreada. */
+                /* Variable que guarda la contraseña autogenerada. */
                 string contrasena = "";
 
-                /* Se garaniza al menos un carácter de cada tipo para cumplir requisitos */
+                /* Se garantiza al menos un carácter de cada tipo para cumplir requisitos */
                 contrasena += mayusculas[rnd.Next(mayusculas.Length)];
                 contrasena += minusculas[rnd.Next(minusculas.Length)];
                 contrasena += numeros[rnd.Next(numeros.Length)];
                 contrasena += simbolos[rnd.Next(simbolos.Length)];
 
-                /* Se copleta la contraseña hasta 10 caracteres con caracteres aleatorios */
+                /* Se completa la contraseña hasta 10 caracteres con caracteres aleatorios */
                 string todos = mayusculas + minusculas + numeros + simbolos;
-
                 for (int i = 4; i < 10; i++)
                     contrasena += todos[rnd.Next(todos.Length)];
 
@@ -149,12 +149,7 @@ namespace BLL.SECURITY
 
         /* -----------------------------------------------------------------------------------------------------
          * Función: ValidarClaveSegura
-         * Descripción: Verifica que la contraseña cumpla con los requisitos de seguridad:
-         *              - Mínimo 8 caracteres
-         *              - Al menos una mayúscula
-         *              - Al menos una minúscula
-         *              - Al menos un número
-         *              - Al menos un símbolo
+         * Descripción: Verifica que la contraseña cumpla con los requisitos de seguridad.
          * Parámetros: contraseña en texto plano y datos del usuario para evitar datos personales.
          * Retorna: true si es segura, false si no.
          -----------------------------------------------------------------------------------------------------*/
@@ -241,7 +236,8 @@ namespace BLL.SECURITY
                 if (usuario == null)
                     throw new Exception("El usuario no existe.");
 
-                /* Se activa el usuario. */
+                /* Se resetean los intentos fallidos y se reactiva el usuario */
+                usuario.IntentosFallidos = 0;
                 usuario.Activo = true;
 
                 /* Se usa el DAO para modificar el estado del usuario. */
@@ -273,16 +269,32 @@ namespace BLL.SECURITY
 
         /* -----------------------------------------------------------------------------------------------------
          * Función: RegistrarIntentoFallido
-         * Descripción: Registra un intento fallido de login. Si supera el máximo, bloquea al usuario.
+         * Descripción: Registra un intento fallido de login.
+         *              Si supera el máximo, bloquea al usuario.
+         *              El usuario admin inicial (Id = 1) nunca se bloquea.
          -----------------------------------------------------------------------------------------------------*/
         private void RegistrarIntentoFallido(Usuario usuario)
         {
             try
             {
-                /* Si supera el máximo de intentos, se desactiva (bloquea) */
-                usuario.Activo = false;
+                /* El usuario admin inicial nunca se bloquea */
+                if (usuario.Id == IdUsuarioAdmin)
+                    return;
 
-                /* Se usa el DAO para modificar el estado del usuario. */
+                /* Se incrementa el contador de intentos fallidos */
+                usuario.IntentosFallidos++;
+
+                /* Si supera el máximo de intentos se bloquea el usuario */
+                if (usuario.IntentosFallidos >= MaxIntentosFallidos)
+                {
+                    /* Se desactiva el usuario */
+                    usuario.Activo = false;
+
+                    /* Se resetea el contador para cuando sea desbloqueado */
+                    usuario.IntentosFallidos = 0;
+                }
+
+                /* Se usa el DAO para guardar los cambios. */
                 usuarioDAO.Update(usuario);
             }
             catch (Exception ex)
@@ -293,16 +305,16 @@ namespace BLL.SECURITY
 
         /* -----------------------------------------------------------------------------------------------------
          * Función: ResetearIntentosFallidos
-         * Descripción: Resetea los intentos fallidos al ingresar correctamente.
+         * Descripción: Resetea el contador de intentos fallidos al ingresar correctamente.
          -----------------------------------------------------------------------------------------------------*/
         private void ResetearIntentosFallidos(Usuario usuario)
         {
             try
             {
-                /* Se activa el usuario. */
-                usuario.Activo = true;
+                /* Se resetea el contador de intentos fallidos */
+                usuario.IntentosFallidos = 0;
 
-                /* Se usa el DAO para modificar el estado del usuario. */
+                /* Se usa el DAO para guardar los cambios. */
                 usuarioDAO.Update(usuario);
             }
             catch (Exception ex)
