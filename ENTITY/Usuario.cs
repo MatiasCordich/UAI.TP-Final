@@ -20,6 +20,13 @@ namespace ENTITY
         public string Clave { get; set; }
         public bool Activo { get; set; } = true;
         public DateTime FechaAlta { get; set; }
+
+        /* true cuando el usuario debe cambiar su clave en el próximo ingreso */
+        /* El admin (Id = 1) siempre tiene este campo en false */
+        public bool DebeCambiarClave { get; set; }
+
+        /* Contador de intentos fallidos de login */
+        /* Al llegar al máximo el usuario se bloquea */
         public int IntentosFallidos { get; set; }
 
         // Propiedad de navegacion
