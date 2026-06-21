@@ -42,7 +42,7 @@ namespace UI
                 RolDAO rolDAO = new RolDAO();
 
                 /* Si ya hay usuarios no hace nada */
-                if (usuarioDAO.GetAll().Count > 0)
+                if (usuarioDAO.GetFiltered().Count > 0)
                     return;
 
                 /* Crea los roles si no existen */
@@ -61,9 +61,8 @@ namespace UI
                     IdRol = 1,
                     Nombre = "José",
                     Apellido = "Pérez",
-                    NombreUsuario = "JPEREZADMIN",
+                    NombreUsuario = "JPEREZ",
                     Clave = EncryptService.HashClave("Admin123!"),
-                    Activo = true,
                     FechaAlta = DateTime.Now
                 };
                 usuarioDAO.Insert(dueno);
