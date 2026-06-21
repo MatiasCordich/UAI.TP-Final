@@ -2,7 +2,6 @@
 using ENTITY;
 using System;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace BLL.SECURITY
 {
@@ -30,6 +29,9 @@ namespace BLL.SECURITY
         /* Días de vigencia de la contraseña (parametrizable). */
         private const int DiasVigenciaContrasena = 90;
 
+        /* Código especial para indicar que el usuario debe cambiar su clave */
+        public const string CodigoDebeCambiarClave = "DEBE_CAMBIAR_CLAVE";
+
         /* ID del usuario admin inicial que nunca se bloquea */
         private const int IdUsuarioAdmin = 1;
 
@@ -40,6 +42,7 @@ namespace BLL.SECURITY
          * Función: Login
          * Descripción: Identifica y autentica al usuario en el sistema.
          *              Verifica que el usuario exista, no esté bloqueado y la contraseña sea correcta.
+         *              Si debe cambiar la clave lanza un código especial para que la UI lo detecte.
          * Parámetros: nombre de usuario y contraseña en texto plano.
          * Retorna: el usuario autenticado.
          -----------------------------------------------------------------------------------------------------*/
@@ -47,22 +50,18 @@ namespace BLL.SECURITY
         {
             try
             {
-                /* Paso 1: Se busca el usuario por nombre de usuario en el XML */
+                /* Se busca el usuario por nombre de usuario en el XML */
                 Usuario usuario = usuarioDAO.GetByUsername(nombreUsuario);
 
-                /* Paso 2: Se verifica que el usuario exista */
+                /* Se verifica que el usuario exista */
                 if (usuario == null)
                     throw new Exception("El usuario no existe en el sistema.");
 
-                /* Paso 3: Se verifica que el usuario esté activo */
+                /* Se verifica que el usuario esté activo (desactivado o bloqueado por intentos) */
                 if (!usuario.Activo)
-                    throw new Exception("El usuario está desactivado. Contacte al administrador.");
+                    throw new Exception("El usuario está desactivado o bloqueado. Contacte al administrador.");
 
-                /* Paso 4: Se verifica si está bloqueado por intentos fallidos */
-                if (EstasBloqueado(usuario))
-                    throw new Exception("El usuario está bloqueado por intentos fallidos. Contacte al administrador.");
-
-                /* Paso 5: Se verifica la contraseña comparando el hash */
+                /* Se verifica la contraseña comparando el hash */
                 if (!EncryptService.VerificarClave(contrasena, usuario.Clave))
                 {
                     /* Si la contraseña es incorrecta, se registra el intento fallido */
@@ -70,21 +69,68 @@ namespace BLL.SECURITY
                     throw new Exception("Contraseña incorrecta.");
                 }
 
-                /* Paso 6: Se resetean los intentos fallidos al ingresar correctamente */
+                /* Se resetean los intentos fallidos al ingresar correctamente */
                 ResetearIntentosFallidos(usuario);
 
-                /* Paso 7: Se verifica si la contraseña está vencida */
-                if (ClaveVencida(usuario))
-                    throw new Exception("La contraseña ha vencido. Debe cambiarla para continuar.");
+                /* Se verifica si la contraseña está vencida (excepto el admin inicial) */
+                if (usuario.Id != IdUsuarioAdmin && ClaveVencida(usuario))
+                    throw new Exception(CodigoDebeCambiarClave);
 
-                /* Paso 8: Se guarda el usuario actual en sesión */
+                /* Se verifica si debe cambiar la clave en este ingreso (excepto el admin inicial) */
+                if (usuario.Id != IdUsuarioAdmin && usuario.DebeCambiarClave)
+                    throw new Exception(CodigoDebeCambiarClave);
+
+                /* Se guarda el usuario actual en sesión */
                 UsuarioActual = usuario;
+
+                /* Se retorna el usuario autenticado. */
                 return usuario;
             }
             catch (Exception ex)
             {
-                throw new Exception("Error en el login: " + ex.Message);
+                throw new Exception(ex.Message);
             }
+        }
+
+         /* -----------------------------------------------------------------------------------------------------
+         * Función: LoginParcial
+         * Descripción: Autentica al usuario pero sin guardarlo en sesión.
+         *              Se usa cuando el usuario debe cambiar la clave antes de ingresar.
+         *              Devuelve el usuario para que formulario de cambiar clave pueda operar.
+         * Parámetros: nombre de usuario y contraseña en texto plano.
+         * Retorna: el usuario autenticado sin guardarlo en sesión.
+         -----------------------------------------------------------------------------------------------------*/
+        public Usuario LoginParcial(string nombreUsuario, string contrasena)
+        {
+            try
+            {
+                /* Busca el usuario por nombre de usuario */
+                Usuario usuario = usuarioDAO.GetByUsername(nombreUsuario);
+ 
+                /* Verifica que el usuario exista. */
+                if (usuario == null)
+                    throw new Exception("El usuario no existe en el sistema.");
+ 
+                /* Valida que la contraseña sea la correcta. */
+                if (!EncryptService.VerificarClave(contrasena, usuario.Clave))
+                    throw new Exception("Contraseña incorrecta.");
+ 
+                /* Devuelve el usuario sin guardarlo en sesión */
+                return usuario;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error en la autenticación: " + ex.Message);
+            }
+        }
+
+        /* -----------------------------------------------------------------------------------------------------
+         * Función: GuardarSesion
+         * Descripción: Guarda el usuario en sesión después de cambiar la contraseña.
+         -----------------------------------------------------------------------------------------------------*/
+        public void GuardarSesion(Usuario usuario)
+        {
+            UsuarioActual = usuario;
         }
 
         /* -----------------------------------------------------------------------------------------------------
@@ -93,6 +139,7 @@ namespace BLL.SECURITY
          -----------------------------------------------------------------------------------------------------*/
         public void Logout()
         {
+            /* Se setea el usuario actual a null. */
             UsuarioActual = null;
         }
 
@@ -113,17 +160,15 @@ namespace BLL.SECURITY
 
                 /* Se instancia el objeto para randomizar la contraseña. */
                 Random rnd = new Random();
-
-                /* Variable que guarda la contraseña autogenerada. */
                 string contrasena = "";
 
-                /* Se garantiza al menos un carácter de cada tipo para cumplir requisitos */
+                /* Se garantiza al menos un carácter de cada tipo */
                 contrasena += mayusculas[rnd.Next(mayusculas.Length)];
                 contrasena += minusculas[rnd.Next(minusculas.Length)];
                 contrasena += numeros[rnd.Next(numeros.Length)];
                 contrasena += simbolos[rnd.Next(simbolos.Length)];
 
-                /* Se completa la contraseña hasta 10 caracteres con caracteres aleatorios */
+                /* Se completa la contraseña hasta 10 caracteres */
                 string todos = mayusculas + minusculas + numeros + simbolos;
                 for (int i = 4; i < 10; i++)
                     contrasena += todos[rnd.Next(todos.Length)];
@@ -138,7 +183,7 @@ namespace BLL.SECURITY
                     array[j] = temp;
                 }
 
-                /* Se devuelve la contraseña aleatoria. */
+                /* Se vuelve transformar el array de caracteres a la contraseña en texto plano y se retorna. */
                 return new string(array);
             }
             catch (Exception ex)
@@ -155,32 +200,32 @@ namespace BLL.SECURITY
          -----------------------------------------------------------------------------------------------------*/
         public bool ValidarClaveSegura(string contrasena, Usuario usuario)
         {
-            /* Se verifica longitud mínima de 8 caracteres */
+            /* Mínimo 8 caracteres */
             if (contrasena.Length < 8)
                 return false;
 
-            /* Se verifica que tenga al menos una mayúscula */
+            /* Al menos una mayúscula */
             if (!Regex.IsMatch(contrasena, "[A-Z]"))
                 return false;
 
-            /* Se verifica que tenga al menos una minúscula */
+            /* Al menos una minúscula */
             if (!Regex.IsMatch(contrasena, "[a-z]"))
                 return false;
 
-            /* Se verifica que tenga al menos un número */
+            /* Al menos un número */
             if (!Regex.IsMatch(contrasena, "[0-9]"))
                 return false;
 
-            /* Se verifica que tenga al menos un símbolo */
+            /* Al menos un símbolo */
             if (!Regex.IsMatch(contrasena, "[!@#$%^&*()]"))
                 return false;
 
-            /* No puede contener el apellido del usuario (dato personal) */
+            /* No puede contener el apellido del usuario */
             if (!string.IsNullOrEmpty(usuario.Apellido) &&
                 contrasena.ToLower().Contains(usuario.Apellido.ToLower()))
                 return false;
 
-            /* No puede contener el nombre de usuario (dato personal) */
+            /* No puede contener el nombre de usuario */
             if (!string.IsNullOrEmpty(usuario.NombreUsuario) &&
                 contrasena.ToLower().Contains(usuario.NombreUsuario.ToLower()))
                 return false;
@@ -191,28 +236,32 @@ namespace BLL.SECURITY
         /* -----------------------------------------------------------------------------------------------------
          * Función: CambiarClave
          * Descripción: Cambia la contraseña del usuario validando que sea segura.
+         *              Al cambiarla exitosamente marca DebeCambiarClave = false.
          * Parámetros: usuario, contraseña actual y nueva contraseña.
          -----------------------------------------------------------------------------------------------------*/
         public void CambiarClave(Usuario usuario, string contrasenaActual, string contrasenaNueva)
         {
             try
             {
-                /* Paso 1: Se verifica que la contraseña actual sea correcta */
+                /* Verifica que la contraseña actual sea correcta */
                 if (!EncryptService.VerificarClave(contrasenaActual, usuario.Clave))
                     throw new Exception("La contraseña actual es incorrecta.");
 
-                /* Paso 2: Se valida que la nueva contraseña cumpla con los requisitos de seguridad */
+                /* Valida que la nueva contraseña cumpla con los requisitos de seguridad */
                 if (!ValidarClaveSegura(contrasenaNueva, usuario))
                     throw new Exception("La nueva contraseña no cumple con los requisitos de seguridad.");
 
-                /* Paso 3: Se verifica que la nueva contraseña sea diferente a la anterior */
+                /* Verifica que la nueva contraseña sea diferente a la anterior */
                 if (EncryptService.VerificarClave(contrasenaNueva, usuario.Clave))
                     throw new Exception("La nueva contraseña no puede ser igual a la anterior.");
 
-                /* Paso 4: Se guarda el hash de la nueva contraseña */
+                /* Guarda el hash de la nueva contraseña */
                 usuario.Clave = EncryptService.HashClave(contrasenaNueva);
 
-                /* Se usa el DAO para modificar la clave del usuario. */
+                /* Marca que ya no debe cambiar la clave */
+                usuario.DebeCambiarClave = false;
+
+                /* Guarda los cambios en el XML */
                 usuarioDAO.Update(usuario);
             }
             catch (Exception ex)
@@ -221,41 +270,41 @@ namespace BLL.SECURITY
             }
         }
 
-        /* -----------------------------------------------------------------------------------------------------
-         * Función: DesbloquearUsuario
-         * Descripción: Desbloquea un usuario bloqueado por intentos fallidos.
-         *              Solo puede ejecutarlo el administrador (Dueño).
-         * Parámetros: ID del usuario a desbloquear.
+         /* -----------------------------------------------------------------------------------------------------
+         * Función: ResetearClave
+         * Descripción: El Administrador resetea la clave de un usuario generando una nueva automática.
+         *              El usuario deberá cambiarla en su próximo ingreso.
+         * Parámetros: ID del usuario al que se le resetea la clave.
+         * Retorna: nueva clave temporal en texto plano para que el admin la comunique.
          -----------------------------------------------------------------------------------------------------*/
-        public void DesbloquearUsuario(int idUsuario)
+        public string ResetearClave(int idUsuario)
         {
             try
             {
-                /* Se valida la existencia del usuario. */
+                /* Verifica que el usuario exista */
                 Usuario usuario = usuarioDAO.GetById(idUsuario);
                 if (usuario == null)
                     throw new Exception("El usuario no existe.");
-
-                /* Se resetean los intentos fallidos y se reactiva el usuario */
-                usuario.IntentosFallidos = 0;
-                usuario.Activo = true;
-
-                /* Se usa el DAO para modificar el estado del usuario. */
+ 
+                /* Genera la nueva clave automática */
+                string nuevaClaveTemporal = GenerarClaveAutomatica();
+ 
+                /* Hashea y guarda la nueva clave */
+                usuario.Clave = EncryptService.HashClave(nuevaClaveTemporal);
+ 
+                /* Obliga al usuario a cambiar la clave en el próximo ingreso */
+                usuario.DebeCambiarClave = true;
+ 
+                /* Guarda los cambios en el XML */
                 usuarioDAO.Update(usuario);
+ 
+                /* Devuelve la clave temporal para que el Administardor la comunique */
+                return nuevaClaveTemporal;
             }
             catch (Exception ex)
             {
-                throw new Exception("Error al desbloquear el usuario: " + ex.Message);
+                throw new Exception("Error al resetear la contraseña: " + ex.Message);
             }
-        }
-
-        /* -----------------------------------------------------------------------------------------------------
-         * Función: EstasBloqueado
-         * Descripción: Verifica si el usuario está bloqueado.
-         -----------------------------------------------------------------------------------------------------*/
-        private bool EstasBloqueado(Usuario usuario)
-        {
-            return !usuario.Activo;
         }
 
         /* -----------------------------------------------------------------------------------------------------
@@ -314,7 +363,7 @@ namespace BLL.SECURITY
                 /* Se resetea el contador de intentos fallidos */
                 usuario.IntentosFallidos = 0;
 
-                /* Se usa el DAO para guardar los cambios. */
+                /* Se usa el DAO de usuarios para guardar los cambios. */
                 usuarioDAO.Update(usuario);
             }
             catch (Exception ex)
