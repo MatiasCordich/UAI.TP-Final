@@ -129,6 +129,32 @@ namespace UI
                 
         }
 
+        /* -----------------------------------------------------------------------------------------------------
+        * Evento: btnVerClave_Click
+        * Descripción: Permite ver la constraseña o ocultarla. 
+        -----------------------------------------------------------------------------------------------------*/
+        private void btnVerClave_Click(object sender, EventArgs e)
+        {
+            /* Si la contraseña está oculta la muestra */
+            if (txtClave.UseSystemPasswordChar)
+            {
+                /* Muestra la contraseña en texto plano */
+                txtClave.UseSystemPasswordChar = false;
 
+                /* Se cambia el texto del botón */
+                btnVerClave.Text = "Ocultar";
+            }
+            else
+            {
+                /* Oculta la contraseña nuevamente */
+                txtClave.UseSystemPasswordChar = true;
+
+                /* Se cambia el texto del botón */
+                btnVerClave.Text = "Mostrar";
+            }
+
+            /* Mantiene el foco en el campo de contraseña */
+            txtClave.Focus();
+        }
     }
 }
