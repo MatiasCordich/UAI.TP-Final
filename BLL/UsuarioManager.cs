@@ -30,14 +30,19 @@ namespace BLL
 
         /* -----------------------------------------------------------------------------------------------------
          * Función: ListarUsuarios
-         * Descripción: Obtiene todos los usuarios activos del sistema.
-         * Retorna: lista de usuarios.
+         * Descripción: Obtiene todos los usuarios como también obtener una lista de usuarios filtrada. 
+         * Parámetros: 
+         *          - Nombre de Usuario
+         *          - Rol
+         *          - Estado
+         *          Todos estos parámetros son opcionales. 
+         * Retorna: lista de usuarios (todos o la lista filtrada según algun criterio)
          -----------------------------------------------------------------------------------------------------*/
         public List<Usuario> ListarUsuarios(string nombreUsuario = null, int? idRol = null, bool? activo = null)
         {
             try
             {
-                /* Obtiene todos los usuarios activos del XML */
+                /* Obtiene una lista completa o filtrada de los usuarios del XML. */
                 return usuarioDAO.GetFiltered(nombreUsuario, idRol, activo );
             }
             catch (Exception ex)
@@ -98,6 +103,12 @@ namespace BLL
                 /* Se registra la fecha de alta */
                 usuario.FechaAlta = DateTime.Now;
 
+                /* El usuario debe cambiar la clave por primera vez. */
+                usuario.DebeCambiarClave = true;
+
+                /* Los intentos se setean a 0. */
+                usuario.IntentosFallidos = 0;
+            
                 /* Guarda el usuario en el XML */
                 usuarioDAO.Insert(usuario);
 
@@ -123,6 +134,10 @@ namespace BLL
                 Usuario existente = usuarioDAO.GetById(usuario.Id);
                 if (existente == null)
                     throw new Exception("El usuario no existe.");
+
+                /* El usuario administrador inicial no puede modificarse. */
+                if (existente.Id == 1)
+                    throw new Exception("El usuario administrador inicial del sistema no puede modificarse.");
 
                 /* Verifica que el usuario esté activo */
                 if (!existente.Activo)
@@ -163,11 +178,15 @@ namespace BLL
                 if (usuario == null)
                     throw new Exception("El usuario no existe.");
 
-                /* Verifica que no esté ya desactivado */
+                /* El usuario administrador inicial no puede desactivarse */
+                if (id == 1)
+                    throw new Exception("El usuario administrador inicial del sistema no puede desactivarse.");
+
+                /* Verifica que el usuario a desactivar no esté ya desactivado */
                 if (!usuario.Activo)
                     throw new Exception("El usuario ya está desactivado.");
 
-                /* Verifica que no se esté desactivando a sí mismo */
+                /* Verifica que no se esté desactivando a sí mismo. */
                 if (id == idUsuarioActual)
                     throw new Exception("No puede desactivar su propio usuario.");
 
@@ -222,7 +241,7 @@ namespace BLL
         -----------------------------------------------------------------------------------------------------*/
         public string PreVisualizarNombreUsuario(string nombre, string apellido)
         {
-            /* Valida que ambos campos tengan valor antes de generar */
+            /* Se validan que ambos campos (nombre y apellido) tengan valores. Caso contario devuelve un string vacío. */
             if (string.IsNullOrEmpty(nombre) || string.IsNullOrEmpty(apellido))
                 return string.Empty;
 
@@ -265,7 +284,7 @@ namespace BLL
          -----------------------------------------------------------------------------------------------------*/
         private bool EsUnicoDueno(int idUsuario)
         {
-            /* Obtiene todos los usuarios activos */
+            /* Obtiene todos los usuarios que sean activos y tengan el rol de "Dueño" */
             List<Usuario> todos = usuarioDAO.GetFiltered(idRol: IdRolDueno, activo: true);
 
             /* Cuenta cuántos Dueños activos hay excluyendo al usuario en cuestión. */
