@@ -1,23 +1,18 @@
 ﻿using BLL.SECURITY;
 using ENTITY;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using UI.Utils;
 
 namespace UI
 {
-     /* -----------------------------------------------------------------------------------------------------
-     * Formulario: FrmLogin
-     * Descripción: Pantalla de inicio de sesión del sistema Babilonia Calzados (Desafío I).
-     *              Identifica y autentica al usuario antes de permitir el acceso.
-     *              Si las credenciales son correctas abre el formulario principal.
-     -----------------------------------------------------------------------------------------------------*/
+    /* -----------------------------------------------------------------------------------------------------
+    * Formulario: FrmLogin
+    * Descripción: Pantalla de inicio de sesión del sistema Babilonia Calzados (Desafío I).
+    *              Identifica y autentica al usuario antes de permitir el acceso.
+    *              Si las credenciales son correctas abre el formulario principal.
+    *              Si el usuario debe cambiar la clave abre FrmCambiarClave.
+    -----------------------------------------------------------------------------------------------------*/
     public partial class FrmLogin : Form
     {
         /* Instancia del servicio de autenticación */
@@ -39,8 +34,7 @@ namespace UI
             /* Si no hay usuario logueado cierra la aplicación */
             if (AuthService.UsuarioActual == null) {
                 Application.Exit();
-            } 
-                
+            }   
         }
 
         /* -----------------------------------------------------------------------------------------------------
@@ -55,12 +49,7 @@ namespace UI
                 /* Valida que el campo usuario no esté vacío */
                 if (string.IsNullOrEmpty(txtUsuario.Text))
                 {
-                    MessageBox.Show("Debe ingresar su nombre de usuario.",
-                                    "Campo requerido",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Warning);
-
-                    /* Funcion Focus() para que el se ubique en el input del usuario. */
+                    DialogHelper.MostrarAviso("Debe ingresar su nombre de usuario.");
                     txtUsuario.Focus();
                     return;
                 }
@@ -68,12 +57,7 @@ namespace UI
                 /* Valida que el campo contraseña no esté vacío */
                 if (string.IsNullOrEmpty(txtClave.Text))
                 {
-                    MessageBox.Show("Debe ingresar su contraseña.",
-                                    "Campo requerido",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Warning);
-
-                    /* Funcion Focus() para que el se ubique en el input de la contraseña. */
+                    DialogHelper.MostrarAviso("Debe ingresar su contraseña.");
                     txtClave.Focus();
                     return;
                 }
@@ -81,7 +65,7 @@ namespace UI
                 /* Intenta autenticar al usuario con las credenciales ingresadas */
                 Usuario usuario = authService.Login(txtUsuario.Text.Trim(), txtClave.Text);
 
-                /* Si la autenticación fue exitosa abre el formulario principal */
+                /* Si la autenticación fue exitosa abre el formulario principal. */
                 FrmPrincipal principal = new FrmPrincipal(usuario);
                 principal.Show();
 
@@ -90,15 +74,28 @@ namespace UI
             }
             catch (Exception ex)
             {
-                /* Muestra el mensaje de error devuelto por el AuthService */
-                MessageBox.Show(ex.Message,
-                                "Error de acceso",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
+                /* Detecta si el usuario debe cambiar la clave */
+                if (ex.Message == AuthService.CodigoDebeCambiarClave)
+                {
+                    /* Obtiene el usuario con LoginParcial para pasarlo al formulario */
+                    Usuario usuario = authService.LoginParcial(txtUsuario.Text.Trim(), txtClave.Text);
 
-                /* Limpia la contraseña y pone el foco en ella para reintentar */
-                txtUsuario.Clear();
-                txtClave.Focus();
+                    /* Abre el formulario de cambio de clave obligatorio */
+                    FrmCambiarClave cambiarClave = new FrmCambiarClave(usuario);
+                    cambiarClave.Show();
+
+                    /* Oculta el login mientras se cambia la clave */
+                    this.Hide();
+                }
+                else
+                {
+                    /* Muestra el mensaje de error devuelto por el AuthService */
+                    DialogHelper.MostrarError(ex.Message);
+
+                    /* Limpia la clave y pone el foco en ella para reintentar */
+                    txtClave.Clear();
+                    txtClave.Focus();
+                }
             }
 
         }

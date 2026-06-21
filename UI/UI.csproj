@@ -82,6 +82,12 @@
     <Compile Include="Fidelizacion\FrmCupones.Designer.cs">
       <DependentUpon>FrmCupones.cs</DependentUpon>
     </Compile>
+    <Compile Include="FrmCambiarClave.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmCambiarClave.Designer.cs">
+      <DependentUpon>FrmCambiarClave.cs</DependentUpon>
+    </Compile>
     <Compile Include="FrmLogin.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -126,6 +132,7 @@
     <Compile Include="Stock\FrmAlertas.Designer.cs">
       <DependentUpon>FrmAlertas.cs</DependentUpon>
     </Compile>
+    <Compile Include="Utils\DialogHelper.cs" />
     <Compile Include="Ventas\FrmCliente.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -146,6 +153,9 @@
     </Compile>
     <EmbeddedResource Include="Administracion\FrmUsuarios.resx">
       <DependentUpon>FrmUsuarios.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmCambiarClave.resx">
+      <DependentUpon>FrmCambiarClave.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FrmLogin.resx">
       <DependentUpon>FrmLogin.cs</DependentUpon>

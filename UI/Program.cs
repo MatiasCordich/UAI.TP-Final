@@ -70,9 +70,8 @@ namespace UI
                 /* Avisa al usuario las credenciales iniciales */
                 MessageBox.Show(
                     "Sistema iniciado por primera vez.\n\n" +
-                    "Usuario: JPEREZADMIN\n" +
-                    "Contraseña: Admin123!\n\n" +
-                    "Por favor cambie la contraseña al ingresar.",
+                    "Usuario: JPEREZ\n" +
+                    "Contraseña: Admin123!\n\n" ,
                     "Inicialización del sistema",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);

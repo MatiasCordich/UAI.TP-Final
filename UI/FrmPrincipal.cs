@@ -1,13 +1,6 @@
 ﻿using BLL.SECURITY;
 using ENTITY;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using UI.Administracion;
 using UI.Compras;
@@ -15,6 +8,7 @@ using UI.Fidelizacion;
 using UI.Pagos;
 using UI.Reportes;
 using UI.Stock;
+using UI.Utils;
 using UI.Ventas;
 
 namespace UI
@@ -240,11 +234,9 @@ namespace UI
         private void MenuCerrarSesion_Click(object sender, EventArgs e)
         {
             /* Pide confirmación antes de cerrar sesión */
-            DialogResult resultado = MessageBox.Show(
+            DialogResult resultado = DialogHelper.MostrarConfirmacion(
                 "¿Está seguro que desea cerrar sesión?",
-                "Cerrar sesión",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
+                "Cerrar sesión");
 
             if (resultado == DialogResult.Yes)
             {
@@ -272,12 +264,19 @@ namespace UI
         private void MenuSalirAplicacion_Click(object sender, EventArgs e)
         {
             /* Pide confirmación antes de salir */
-            DialogResult resultado = MessageBox.Show(
+            DialogResult resultado = DialogHelper.MostrarConfirmacion(
                 "¿Está seguro que desea salir del sistema?",
-                "Salir",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
+                "Salir");
 
+            /* Cierra la sesión del usuario */
+            AuthService authService = new AuthService();
+            authService.Logout();
+
+            /* Cierra todos los formularios hijos */
+            foreach (Form f in this.MdiChildren)
+                f.Close();
+
+            /* Cierra la aplicación. */
             if (resultado == DialogResult.Yes)
                 Application.Exit();
         }
