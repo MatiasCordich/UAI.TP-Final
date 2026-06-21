@@ -18,8 +18,9 @@ namespace ENTITY
         public string Apellido { get; set; }
         public string NombreUsuario { get; set; }
         public string Clave { get; set; }
-        public bool Activo { get; set; }
+        public bool Activo { get; set; } = true;
         public DateTime FechaAlta { get; set; }
+        public int IntentosFallidos { get; set; }
 
         // Propiedad de navegacion
         public Rol Rol { get; set; }
