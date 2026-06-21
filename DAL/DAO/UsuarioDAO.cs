@@ -22,8 +22,8 @@ namespace DAL.DAO
 
          /* -----------------------------------------------------------------------------------------------------
          * Función: GetFiltered
-         * Descripción: Obtiene usuarios aplicando filtros opcionales.
-         *              Si no se pasa ningún filtro devuelve todos los usuarios (activos e inactivos).
+         * Descripción: Obtiene TODOS los usuarios.
+         *              A su vez tiene parámetros opcionales si se quiere filtrar la búsqueda. 
          * Parámetros:
          *              nombreUsuario → filtra por nombre de usuario (contiene)
          *              idRol         → filtra por rol exacto
@@ -36,23 +36,33 @@ namespace DAL.DAO
                 /* Obtiene todos los usuarios del XML sin filtrar */
                 List<Usuario> usuarios = orm.ObtenerTodos();
  
-                /* Aplica el filtro de nombre de usuario si se proporcionó */
+                /* Si se proporcionó un nombre de Usuario, se aplica el filtro. */
                 if (!string.IsNullOrEmpty(nombreUsuario))
-                    usuarios = usuarios.Where(u => u.NombreUsuario.ToUpper()
-                                       .Contains(nombreUsuario.ToUpper())).ToList();
- 
-                /* Aplica el filtro de rol si se proporcionó */
+                {
+                    usuarios = usuarios.Where(
+                        u => u.NombreUsuario.ToUpper()
+                        .Contains(nombreUsuario.ToUpper())).ToList();
+                }
+                    
+                /* Si se propocionó algun Rol, se aplica el filtro */
                 if (idRol.HasValue)
+                {
                     usuarios = usuarios.Where(u => u.IdRol == idRol.Value).ToList();
- 
-                /* Aplica el filtro de estado si se proporcionó */
+                }
+                    
+                /* Si se proporcionó algun estado, se aplica al filtro */
                 if (activo.HasValue)
+                {
                     usuarios = usuarios.Where(u => u.Activo == activo.Value).ToList();
- 
+                }
+                    
                 /* Carga el rol de cada usuario */
                 foreach (Usuario u in usuarios)
+                {
                     u.Rol = rolOrm.ObtenerPorId(u.IdRol);
- 
+                }
+                    
+                /* Devuelve los usuarios. */
                 return usuarios;
             }
             catch (Exception ex)
@@ -61,8 +71,11 @@ namespace DAL.DAO
             }
         }
 
-
-
+         /* -----------------------------------------------------------------------------------------------------
+         * Función: GetById
+         * Descripción: Obtiene un usuario por su ID
+         * Parámetros: id → id del usuario. 
+         -----------------------------------------------------------------------------------------------------*/
         public Usuario GetById(int id)
         {
             try
@@ -71,12 +84,12 @@ namespace DAL.DAO
                 Usuario usuario = orm.ObtenerPorId(id);
 
                 /* Si no existe, devuelve null. */
-                if (usuario == null)
-                    return null;
-
+                if (usuario == null) { return null; }
+                    
                 /* Carga el rol del usuario */
                 usuario.Rol = rolOrm.ObtenerPorId(usuario.IdRol);
 
+                /* Devuelve el Usuario. */
                 return usuario;
             }
             catch (Exception ex)
@@ -84,7 +97,11 @@ namespace DAL.DAO
                 throw new Exception("Error al obtener el usuario: " + ex.Message);
             }
         }
-
+        /* -----------------------------------------------------------------------------------------------------
+        * Función: GetByUsername
+        * Descripción: Busca un usuario por su nombre de usuario. 
+        * Parámetros: nombreUsuario → nombre del usuario registrado. 
+        -----------------------------------------------------------------------------------------------------*/
         /* Busca un usuario por su nombre de usuario - usado en el login (Desafío I) */
         public Usuario GetByUsername(string nombreUsuario)
         {
@@ -99,7 +116,6 @@ namespace DAL.DAO
                     return null;
 
                 /* Carga el rol del usuario */
-                RolORM rolOrm = new RolORM();
                 usuario.Rol = rolOrm.ObtenerPorId(usuario.IdRol);
 
                 return usuario;
@@ -110,10 +126,16 @@ namespace DAL.DAO
             }
         }
 
+        /* -----------------------------------------------------------------------------------------------------
+        * Función: Insert
+        * Descripción: Registra el usuario.
+        * Parámetros: La entidad Usuario
+        -----------------------------------------------------------------------------------------------------*/
         public void Insert(Usuario usuario)
         {
             try
             {
+                /* Llama a la función Insertar() del ORM de Usuario. */
                 orm.Insertar(usuario);
             }
             catch (Exception ex)
@@ -122,10 +144,17 @@ namespace DAL.DAO
             }
         }
 
+
+        /* -----------------------------------------------------------------------------------------------------
+        * Función: Update
+        * Descripción: Modifica al usuario el usuario.
+        * Parámetros: La entidad Usuario
+        -----------------------------------------------------------------------------------------------------*/
         public void Update(Usuario usuario)
         {
             try
             {
+                /* Llama a la función Acutalizar() del ORM de Usuario. */
                 orm.Actualizar(usuario);
             }
             catch (Exception ex)
@@ -134,6 +163,11 @@ namespace DAL.DAO
             }
         }
 
+        /* -----------------------------------------------------------------------------------------------------
+        * Función: Delete
+        * Descripción: Elimina el usuario.
+        * Parámetros: El id del usuario a eliminar.
+        -----------------------------------------------------------------------------------------------------*/
         public void Delete(int id)
         {
             try
