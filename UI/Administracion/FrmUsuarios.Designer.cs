@@ -53,6 +53,7 @@
             this.txtFiltroUsuario = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.cmbFiltroRol = new System.Windows.Forms.ComboBox();
+            this.btnResetearClave = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvUsuarios)).BeginInit();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -63,11 +64,15 @@
             this.dgvUsuarios.AllowUserToAddRows = false;
             this.dgvUsuarios.AllowUserToDeleteRows = false;
             this.dgvUsuarios.AllowUserToResizeRows = false;
+            this.dgvUsuarios.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dgvUsuarios.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvUsuarios.Location = new System.Drawing.Point(28, 174);
             this.dgvUsuarios.Name = "dgvUsuarios";
+            this.dgvUsuarios.ReadOnly = true;
+            this.dgvUsuarios.RowHeadersVisible = false;
             this.dgvUsuarios.RowHeadersWidth = 62;
             this.dgvUsuarios.RowTemplate.Height = 28;
+            this.dgvUsuarios.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvUsuarios.Size = new System.Drawing.Size(913, 390);
             this.dgvUsuarios.TabIndex = 0;
             this.dgvUsuarios.SelectionChanged += new System.EventHandler(this.dgvUsuarios_SelectionChanged);
@@ -335,12 +340,25 @@
             this.cmbFiltroRol.Size = new System.Drawing.Size(246, 32);
             this.cmbFiltroRol.TabIndex = 9;
             // 
+            // btnResetearClave
+            // 
+            this.btnResetearClave.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(128)))));
+            this.btnResetearClave.Font = new System.Drawing.Font("Gadugi", 11F, System.Drawing.FontStyle.Bold);
+            this.btnResetearClave.Location = new System.Drawing.Point(700, 570);
+            this.btnResetearClave.Name = "btnResetearClave";
+            this.btnResetearClave.Size = new System.Drawing.Size(241, 51);
+            this.btnResetearClave.TabIndex = 16;
+            this.btnResetearClave.Text = "Resetear Contraseña";
+            this.btnResetearClave.UseVisualStyleBackColor = false;
+            this.btnResetearClave.Click += new System.EventHandler(this.btnResetearClave_Click);
+            // 
             // FrmUsuarios
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(967, 1076);
+            this.Controls.Add(this.btnResetearClave);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.btnActivar);
             this.Controls.Add(this.btnDesactivar);
@@ -391,5 +409,6 @@
         private System.Windows.Forms.TextBox txtFiltroUsuario;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.ComboBox cmbFiltroRol;
+        private System.Windows.Forms.Button btnResetearClave;
     }
 }

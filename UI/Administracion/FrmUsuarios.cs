@@ -4,13 +4,9 @@ using DAL.DAO;
 using ENTITY;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using UI.Utils;
 
 namespace UI.Administracion
 {
@@ -23,6 +19,9 @@ namespace UI.Administracion
     {
         /* Instancia del manager de usuarios */
         private UsuarioManager usuarioManager = new UsuarioManager();
+
+        /* Instancia del servicio de autenticación para resetear claves */
+        private AuthService authService = new AuthService();
 
         /* Instancia del DAO de roles para cargar el combo */
         private RolDAO rolDAO = new RolDAO();
@@ -44,13 +43,11 @@ namespace UI.Administracion
          -----------------------------------------------------------------------------------------------------*/
         private void FrmUsuarios_Load(object sender, EventArgs e)
         {
-            /* Configura las columnas del DataGridView */
-            ConfigurarGrilla();
 
             /* Carga los roles disponibles en el ComboBox */
             CargarRoles();
 
-            /* Carga el combo de estado con las opciones disponibles */
+            /* Carga los estados disponibles en el ComboBox de búsqueda para filtrar usuarios. */
             CargarEstados();
 
             /* Carga la lista de usuarios */
@@ -71,11 +68,11 @@ namespace UI.Administracion
             ActualizarNombreUsuario();
         }
 
-         /* -----------------------------------------------------------------------------------------------------
-         * Evento: txtNombre_Leave
-         * Descripción: Se ejecuta al salir del campo Nombre.
-         *              Regenera el nombre de usuario automáticamente.
-         -----------------------------------------------------------------------------------------------------*/
+        /* -----------------------------------------------------------------------------------------------------
+        * Evento: txtApellido_Leave
+        * Descripción: Se ejecuta al salir del campo Nombre.
+        *              Regenera el nombre de usuario automáticamente.
+        -----------------------------------------------------------------------------------------------------*/
         private void txtApellido_Leave(object sender, EventArgs e)
         {
             /* Regenera el nombre de usuario al salir del campo apellido */
@@ -102,13 +99,14 @@ namespace UI.Administracion
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al seleccionar el usuario: " + ex.Message,
-                                "Error",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
+                DialogHelper.MostrarError("Error al seleccionar el usuario: " + ex.Message);
             }
         }
 
+        /* -----------------------------------------------------------------------------------------------------
+        * Evento: btnInsertar_Click
+        * Descripción: Lógica para activar el panel cuando se quiere registrar un nuevo usuario.
+        -----------------------------------------------------------------------------------------------------*/
         private void btnInsertar_Click(object sender, EventArgs e)
         {
             /* Limpia el panel y lo habilita */
@@ -131,10 +129,7 @@ namespace UI.Administracion
             /* Verifica que haya un usuario seleccionado */
             if (usuarioSeleccionado == null)
             {
-                MessageBox.Show("Debe seleccionar un usuario para modificar.",
-                                "Aviso",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Warning);
+                DialogHelper.MostrarAviso("Debe seleccionar un usuario para modificar.");
                 return;
             }
 
@@ -172,19 +167,14 @@ namespace UI.Administracion
             /* Verifica que haya un usuario seleccionado */
             if (usuarioSeleccionado == null)
             {
-                MessageBox.Show("Debe seleccionar un usuario para desactivar.",
-                                "Aviso",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Warning);
+                DialogHelper.MostrarAviso("Debe seleccionar un usuario para desactivar.");
                 return;
             }
 
             /* Pide confirmación antes de desactivar */
-            DialogResult resultado = MessageBox.Show(
+            DialogResult resultado = DialogHelper.MostrarConfirmacion(
                 $"¿Está seguro que desea desactivar al usuario {usuarioSeleccionado.NombreUsuario}?",
-                "Confirmar desactivación",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
+                "Confirmar desactivación");
 
             if (resultado == DialogResult.Yes)
             {
@@ -194,10 +184,7 @@ namespace UI.Administracion
                     usuarioManager.DesactivarUsuario(usuarioSeleccionado.Id,
                                                      AuthService.UsuarioActual.Id);
 
-                    MessageBox.Show("Usuario desactivado correctamente.",
-                                    "Éxito",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Information);
+                    DialogHelper.MostrarExito("Usuario desactivado correctamente.");
 
                     /* Recarga la lista y limpia el panel */
                     CargarUsuarios();
@@ -205,10 +192,7 @@ namespace UI.Administracion
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message,
-                                    "Error",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Error);
+                    DialogHelper.MostrarError(ex.Message);
                 }
             }
         }
@@ -222,19 +206,14 @@ namespace UI.Administracion
             /* Verifica que haya un usuario seleccionado */
             if (usuarioSeleccionado == null)
             {
-                MessageBox.Show("Debe seleccionar un usuario para activar.",
-                                "Aviso",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Warning);
+                DialogHelper.MostrarAviso("Debe seleccionar un usuario para activar.");
                 return;
             }
 
             /* Pide confirmación antes de activar */
-            DialogResult resultado = MessageBox.Show(
-                $"¿Está seguro que desea activar al usuario {usuarioSeleccionado.NombreUsuario}?",
-                "Confirmar activación",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
+            DialogResult resultado = DialogHelper.MostrarConfirmacion(
+                            $"¿Está seguro que desea activar al usuario {usuarioSeleccionado.NombreUsuario}?",
+                            "Confirmar activación");
 
             if (resultado == DialogResult.Yes)
             {
@@ -243,10 +222,7 @@ namespace UI.Administracion
                     /* Activa el usuario */
                     usuarioManager.ActivarUsuario(usuarioSeleccionado.Id);
 
-                    MessageBox.Show("Usuario activado correctamente.",
-                                    "Éxito",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Information);
+                    DialogHelper.MostrarExito("Usuario activado correctamente.");
 
                     /* Recarga la lista y limpia el panel */
                     CargarUsuarios();
@@ -254,10 +230,7 @@ namespace UI.Administracion
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(ex.Message,
-                                    "Error",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Error);
+                    DialogHelper.MostrarError(ex.Message);
                 }
             }
         }
@@ -283,10 +256,7 @@ namespace UI.Administracion
                     /* Llama al manager para modificar */
                     usuarioManager.ModificarUsuario(usuarioSeleccionado);
 
-                    MessageBox.Show("Usuario modificado correctamente.",
-                                    "Éxito",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Information);
+                    DialogHelper.MostrarExito("Usuario modificado correctamente.");
                 }
                 else
                 {
@@ -319,10 +289,63 @@ namespace UI.Administracion
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message,
-                                "Error",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
+                DialogHelper.MostrarError(ex.Message);
+            }
+        }
+
+        /* -----------------------------------------------------------------------------------------------------
+        * Evento: btnResetearClave_Click
+        * Descripción: Resetea la contraseña del usuario seleccionado y genera una nueva temporal.
+        * El usuario admin inicial (Id = 1) no puede resetearse.
+        -----------------------------------------------------------------------------------------------------*/
+        private void btnResetearClave_Click(object sender, EventArgs e)
+        {
+            /* Verifica que haya un usuario seleccionado */
+            if (usuarioSeleccionado == null)
+            {
+                DialogHelper.MostrarAviso("Debe seleccionar un usuario para resetear la clave.");
+                return;
+            }
+
+            /* El admin inicial no puede resetearse */
+            if (usuarioSeleccionado.Id == 1)
+            {
+                DialogHelper.MostrarAviso("No se puede resetear la clave del administrador inicial del sistema.");
+                return;
+            }
+
+            /* Pide confirmación antes de resetear */
+            DialogResult resultado = DialogHelper.MostrarConfirmacion(
+                $"¿Está seguro que desea resetear la clave de {usuarioSeleccionado.NombreUsuario}?\n" +
+                $"El usuario deberá cambiarla en su próximo ingreso.",
+                "Confirmar reseteo de clave");
+
+            if (resultado == DialogResult.Yes)
+            {
+                try
+                {
+                    /* Resetea la clave y obtiene la nueva clave temporal */
+                    string claveTemporal = authService.ResetearClave(usuarioSeleccionado.Id);
+
+                    /* Muestra la nueva clave al admin */
+                    MessageBox.Show(
+                        $"Contraseña reseteada correctamente.\n\n" +
+                        $"Usuario: {usuarioSeleccionado.NombreUsuario}\n" +
+                        $"Contraseña temporal: {claveTemporal}\n\n" +
+                        $"Comunique esta Contraseña al usuario.\n" +
+                        $"Deberá cambiarla en su próximo ingreso.",
+                        "Contraseña reseteada",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+
+                    /* Recarga la lista */
+                    CargarUsuarios();
+                    LimpiarPanel();
+                }
+                catch (Exception ex)
+                {
+                    DialogHelper.MostrarError(ex.Message);
+                }
             }
         }
 
@@ -369,26 +392,6 @@ namespace UI.Administracion
         /* -----------------------------------------------------------------------------------------------------
          * MÉTODOS PRIVADOS
          -----------------------------------------------------------------------------------------------------*/
-
-        /* -----------------------------------------------------------------------------------------------------
-         * Función: ConfigurarGrilla
-         * Descripción: Configura las propiedades del DataGridView.
-         -----------------------------------------------------------------------------------------------------*/
-        private void ConfigurarGrilla()
-        {
-            /* No permite edición directa en la grilla */
-            dgvUsuarios.ReadOnly = true;
-
-            /* Selecciona la fila completa al hacer clic */
-            dgvUsuarios.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-
-            /* No muestra la columna de encabezado de fila */
-            dgvUsuarios.RowHeadersVisible = false;
-
-            /* Ajusta las columnas al ancho del control */
-            dgvUsuarios.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-        }
-
         /* -----------------------------------------------------------------------------------------------------
          * Función: CargarRoles
          * Descripción: Carga los roles disponibles en el ComboBox.
@@ -417,10 +420,7 @@ namespace UI.Administracion
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar los roles: " + ex.Message,
-                                "Error",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
+                DialogHelper.MostrarError("Error al cargar los roles: " + ex.Message);
             }
         }
 
@@ -484,7 +484,7 @@ namespace UI.Administracion
                 /* Agrega cada usuario como fila en la grilla */
                 foreach (Usuario u in usuarios)
                 {
-                    dgvUsuarios.Rows.Add(
+                    int index = dgvUsuarios.Rows.Add(
                         u.Id,
                         u.NombreUsuario,
                         u.Nombre,
@@ -492,14 +492,23 @@ namespace UI.Administracion
                         u.Rol?.Nombre,
                         u.Activo ? "Activo" : "Inactivo"
                     );
+
+                    /* Colorea la celda de Estado según el valor */
+                    if (u.Activo)
+                    {
+                        dgvUsuarios.Rows[index].Cells["Estado"].Style.BackColor = Color.LightGreen;
+                        dgvUsuarios.Rows[index].Cells["Estado"].Style.ForeColor = Color.DarkGreen;
+                    }
+                    else
+                    {
+                        dgvUsuarios.Rows[index].Cells["Estado"].Style.BackColor = Color.LightCoral;
+                        dgvUsuarios.Rows[index].Cells["Estado"].Style.ForeColor = Color.DarkRed;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error al cargar los usuarios: " + ex.Message,
-                                "Error",
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
+                DialogHelper.MostrarError("Error al cargar los usuarios: " + ex.Message);
             }
         }
 
@@ -554,5 +563,6 @@ namespace UI.Administracion
                 txtApellido.Text.Trim()
             );
         }
+
     }
 }
