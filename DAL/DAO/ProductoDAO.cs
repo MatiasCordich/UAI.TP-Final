@@ -19,11 +19,37 @@ namespace DAL.DAO
     {
         private ProductoORM orm = new ProductoORM();
 
-        public List<Producto> GetAll()
+        /* -----------------------------------------------------------------------------------------------------
+        * Función: GetAllOrFiltered
+        * Descripción: Obtiene TODOS los productos.
+        *              A su vez tiene parámetros opcionales si se quiere filtrar la búsqueda.
+        * Parámetros:
+        *              modelo → filtra por modelo (contiene)
+        *              activo → filtra por estado (true=activo, false=inactivo, null=todos)
+        -----------------------------------------------------------------------------------------------------*/
+        public List<Producto> GetAllOrFiltered(string modelo = null, bool? activo = null)
         {
             try
             {
-                return orm.ObtenerTodos().Where(p => p.Activo).ToList();
+                /* Obtiene todos los productos del XML sin filtrar */
+                List<Producto> productos = orm.ObtenerTodos();
+
+                /* Si se proporcionó un modelo, se aplica el filtro */
+                if (!string.IsNullOrEmpty(modelo))
+                {
+                    productos = productos.Where(
+                        p => p.Modelo.ToUpper()
+                        .Contains(modelo.ToUpper())).ToList();
+                }
+
+                /* Si se proporcionó un estado, se aplica el filtro */
+                if (activo.HasValue)
+                {
+                    productos = productos.Where(p => p.Activo == activo.Value).ToList();
+                }
+
+                /* Devuelve los productos */
+                return productos;
             }
             catch (Exception ex)
             {
@@ -31,6 +57,11 @@ namespace DAL.DAO
             }
         }
 
+        /* -----------------------------------------------------------------------------------------------------
+         * Función: GetById
+         * Descripción: Obtiene un producto por su ID.
+         * Parámetros: id → id del producto.
+         -----------------------------------------------------------------------------------------------------*/
         public Producto GetById(int id)
         {
             try
@@ -43,7 +74,11 @@ namespace DAL.DAO
             }
         }
 
-        /* Busca productos por modelo y talle con stock disponible (CU01) */
+        /* -----------------------------------------------------------------------------------------------------
+         * Función: GetByModelAndSize
+         * Descripción: Busca productos activos por modelo y talle - usado en ventas (CU01).
+         * Parámetros: modelo y talle del calzado.
+         -----------------------------------------------------------------------------------------------------*/
         public List<Producto> GetByModelAndSize(string modelo, int talle)
         {
             try
@@ -61,21 +96,11 @@ namespace DAL.DAO
             }
         }
 
-        /* Productos con stock igual o menor al mínimo configurado (CU10) */
-        public List<Producto> GetCriticalStock()
-        {
-            try
-            {
-                return orm.ObtenerTodos()
-                          .Where(p => p.Activo && p.Stock <= p.StockMinimo)
-                          .ToList();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error al obtener productos con stock crítico: " + ex.Message);
-            }
-        }
-
+        /* -----------------------------------------------------------------------------------------------------
+         * Función: Insert
+         * Descripción: Registra el producto.
+         * Parámetros: La entidad Producto.
+         -----------------------------------------------------------------------------------------------------*/
         public void Insert(Producto producto)
         {
             try
@@ -88,6 +113,11 @@ namespace DAL.DAO
             }
         }
 
+        /* -----------------------------------------------------------------------------------------------------
+         * Función: Update
+         * Descripción: Modifica el producto.
+         * Parámetros: La entidad Producto.
+         -----------------------------------------------------------------------------------------------------*/
         public void Update(Producto producto)
         {
             try
@@ -100,7 +130,11 @@ namespace DAL.DAO
             }
         }
 
-        /* Baja lógica: no se elimina, se desactiva */
+        /* -----------------------------------------------------------------------------------------------------
+         * Función: Deactivate
+         * Descripción: Baja lógica del producto.
+         * Parámetros: El id del producto a desactivar.
+         -----------------------------------------------------------------------------------------------------*/
         public void Deactivate(int id)
         {
             try

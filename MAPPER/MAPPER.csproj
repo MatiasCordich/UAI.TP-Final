@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ComponenteMapper.cs" />
     <Compile Include="ConciliacionDiariaMapper.cs" />
     <Compile Include="AlertaStockMapper.cs" />
     <Compile Include="AjustesStockMapper.cs" />

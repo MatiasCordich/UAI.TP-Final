@@ -41,11 +41,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Composite.cs" />
+    <Compile Include="Leaf.cs" />
+    <Compile Include="Componente.cs" />
     <Compile Include="ConciliacionDiaria.cs" />
     <Compile Include="AlertaStock.cs" />
     <Compile Include="AjusteStock.cs" />
     <Compile Include="CuponFidelizacion.cs" />
     <Compile Include="Interfaz\IEntidadConId.cs" />
+    <Compile Include="NombresLeaf.cs" />
     <Compile Include="Recibo.cs" />
     <Compile Include="Pago.cs" />
     <Compile Include="PedidoProducto.cs" />

@@ -21,16 +21,19 @@ namespace BLL
         private StockManager stockManager = new StockManager();
 
         /* -----------------------------------------------------------------------------------------------------
-         * Función: ListarProductos
-         * Descripción: Obtiene todos los productos activos.
+         * Función: ListarProductosOFiltrados
+         * Descripción: Obtiene todos los productos o filtra según los parámetros opcionales.
+         * Parámetros:
+         *              modelo → filtra por modelo (contiene)
+         *              activo → filtra por estado (true=activo, false=inactivo, null=todos)
          * Retorna: lista de productos.
          -----------------------------------------------------------------------------------------------------*/
-        public List<Producto> ListarProductos()
+        public List<Producto> ListarProductosOFiltrados(string modelo = null, bool? activo = null)
         {
             try
             {
-                /* Obtiene todos los productos activos del XML */
-                return productoDAO.GetAll();
+                /* Delega el filtrado al DAO con los parámetros opcionales */
+                return productoDAO.GetAllOrFiltered(modelo, activo);
             }
             catch (Exception ex)
             {
@@ -252,7 +255,7 @@ namespace BLL
             if (producto.Talle <= 0)
                 throw new Exception("El talle debe ser mayor a cero.");
 
-            /* Validaciones numéricas */
+            /* Validaciones numéricaos */
             if (producto.Precio <= 0)
                 throw new Exception("El precio debe ser mayor a cero.");
 

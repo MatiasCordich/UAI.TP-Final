@@ -151,6 +151,9 @@
     <Compile Include="Ventas\FrmPostVenta.Designer.cs">
       <DependentUpon>FrmPostVenta.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="Administracion\FrmProductos.resx">
+      <DependentUpon>FrmProductos.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Administracion\FrmUsuarios.resx">
       <DependentUpon>FrmUsuarios.cs</DependentUpon>
     </EmbeddedResource>

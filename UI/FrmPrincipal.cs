@@ -47,65 +47,76 @@ namespace UI
             ConfigurarMenuPorRol();
         }
 
-         /* -----------------------------------------------------------------------------------------------------
-         * Función: ConfigurarMenuPorRol
-         * Descripción: Muestra u oculta las opciones del menú según el rol del usuario.
-         *              Cada rol tiene acceso solo a las funcionalidades que le corresponden.
-         -----------------------------------------------------------------------------------------------------*/
+        /* -----------------------------------------------------------------------------------------------------
+        * Función: ConfigurarMenuPorRol
+        * Descripción: Muestra u oculta las opciones del menú según los permisos del usuario logueado.
+        *              Cada ítem se muestra solo si el árbol de permisos de su rol incluye la patente
+        *              correspondiente (patrón Composite). Un menú principal se muestra si al menos
+        *              uno de sus ítems está visible.
+        -----------------------------------------------------------------------------------------------------*/
         private void ConfigurarMenuPorRol()
         {
-            /* Por defecto oculta todas las opciones del menú */
-            MenuVentas.Visible        = false;
-            MenuCompras.Visible       = false;
-            MenuPagos.Visible         = false;
-            MenuStock.Visible         = false;
-            MenuFidelizacion.Visible  = false;
-            MenuReportes.Visible      = false;
-            MenuAdministracion.Visible = false;
- 
-            /* Obtiene el nombre del rol del usuario */
-            string rol = usuarioActual.Rol?.Nombre;
- 
-            /* Activa las opciones según el rol */
-            switch (rol)
-            {
-                case "Dueño":
-                    /* El dueño tiene acceso a todo */
-                    MenuVentas.Visible         = true;
-                    MenuCompras.Visible        = true;
-                    MenuPagos.Visible          = true;
-                    MenuStock.Visible          = true;
-                    MenuFidelizacion.Visible   = true;
-                    MenuReportes.Visible       = true;
-                    MenuAdministracion.Visible = true;
-                    break;
- 
-                case "EncargadoVentas":
-                    /* El encargado de ventas accede a ventas, clientes y reportes */
-                    MenuVentas.Visible       = true;
-                    MenuFidelizacion.Visible = true;
-                    MenuReportes.Visible     = true;
-                    break;
- 
-                case "EmpleadoVentas":
-                    /* El empleado de ventas solo accede al módulo de ventas */
-                    MenuVentas.Visible = true;
-                    break;
- 
-                case "EncargadoCompras":
-                    /* El encargado de compras accede a compras, pagos y stock */
-                    MenuCompras.Visible = true;
-                    MenuPagos.Visible   = true;
-                    MenuStock.Visible   = true;
-                    break;
- 
-                case "EncargadoInventario":
-                    /* El encargado de inventario solo accede al módulo de stock */
-                    MenuStock.Visible = true;
-                    break;
-            }
+            /* Se instancia el servicio de autenticación para consultar los permisos del usuario logueado. */
+            AuthService authService = new AuthService();
+
+            /* Se consulta cada permiso una sola vez y se guarda el resultado.
+               No se lee la propiedad Visible de los ítems porque en un menú desplegable cerrado
+               puede devolver false aunque el ítem esté habilitado para mostrarse. */
+
+            /* VENTAS */
+            bool nuevaVenta = authService.TienePermiso(NombresLeaf.NuevaVenta);
+            bool postVenta = authService.TienePermiso(NombresLeaf.PostVenta);
+            bool clientes = authService.TienePermiso(NombresLeaf.GestionarClientes);
+
+            /* COMPRAS */
+            bool pedidos = authService.TienePermiso(NombresLeaf.Pedidos);
+            bool recepcion = authService.TienePermiso(NombresLeaf.Recepcion);
+
+            /* PAGOS */
+            bool registrarPago = authService.TienePermiso(NombresLeaf.RegistrarPago);
+            bool conciliacion = authService.TienePermiso(NombresLeaf.Conciliacion);
+
+            /* STOCK */
+            bool ajusteStock = authService.TienePermiso(NombresLeaf.AjusteStock);
+            bool alertas = authService.TienePermiso(NombresLeaf.Alertas);
+
+            /* FIDELIZACIÓN */
+            bool cupones = authService.TienePermiso(NombresLeaf.Cupones);
+
+            /* REPORTES */
+            bool dashboard = authService.TienePermiso(NombresLeaf.Dashboard);
+
+            /* ADMINISTRACIÓN */
+            bool usuarios = authService.TienePermiso(NombresLeaf.GestionarUsuarios);
+            bool productos = authService.TienePermiso(NombresLeaf.GestionarProductos);
+            bool proveedores = authService.TienePermiso(NombresLeaf.GestionarProveedores);
+
+            /* Se muestra u oculta cada ítem del menú según su permiso. */
+            MenuNuevaVenta.Visible = nuevaVenta;
+            MenuPostVenta.Visible = postVenta;
+            MenuClientes.Visible = clientes;
+            MenuPedidos.Visible = pedidos;
+            MenuRecepcion.Visible = recepcion;
+            MenuRegistrarPago.Visible = registrarPago;
+            MenuConciliacion.Visible = conciliacion;
+            MenuAjusteStock.Visible = ajusteStock;
+            MenuAlertas.Visible = alertas;
+            MenuCupones.Visible = cupones;
+            MenuDashboard.Visible = dashboard;
+            MenuUsuarios.Visible = usuarios;
+            MenuProductos.Visible = productos;
+            MenuProveedores.Visible = proveedores;
+
+            /* Se muestra cada menú principal solo si tiene al menos un ítem visible. */
+            MenuVentas.Visible = nuevaVenta || postVenta || clientes;
+            MenuCompras.Visible = pedidos || recepcion;
+            MenuPagos.Visible = registrarPago || conciliacion;
+            MenuStock.Visible = ajusteStock || alertas;
+            MenuFidelizacion.Visible = cupones;
+            MenuReportes.Visible = dashboard;
+            MenuAdministracion.Visible = usuarios || productos || proveedores;
         }
- 
+
         /* -----------------------------------------------------------------------------------------------------
          * Función: AbrirFormulario
          * Descripción: Abre un formulario como MDI child dentro del formulario principal.
@@ -126,7 +137,7 @@ namespace UI
                     return;
                 }
             }
- 
+
             /* Si no está abierto lo configura como MDI child y lo muestra */
             formulario.MdiParent = this;
             formulario.Show();
@@ -268,17 +279,21 @@ namespace UI
                 "¿Está seguro que desea salir del sistema?",
                 "Salir");
 
-            /* Cierra la sesión del usuario */
-            AuthService authService = new AuthService();
-            authService.Logout();
-
-            /* Cierra todos los formularios hijos */
-            foreach (Form f in this.MdiChildren)
-                f.Close();
-
-            /* Cierra la aplicación. */
+            /* Solo si el usuario confirma se cierra la sesión, se cierran los formularios hijos y se sale.
+               Si responde que No, no se toca nada y sigue trabajando con su sesión abierta. */
             if (resultado == DialogResult.Yes)
+            {
+                /* Cierra la sesión del usuario */
+                AuthService authService = new AuthService();
+                authService.Logout();
+
+                /* Cierra todos los formularios hijos */
+                foreach (Form f in this.MdiChildren)
+                    f.Close();
+
+                /* Cierra la aplicación. */
                 Application.Exit();
+            }
         }
     }
 }

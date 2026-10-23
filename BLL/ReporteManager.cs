@@ -161,7 +161,7 @@ namespace BLL
                 /* Se obtienen todos los productos activos del XML */
                 /* Los ordena primero por modelo y luego por talle para facilitar la lectura. */
                 /* Si no hay productos devuelve lista vacía sin lanzar error */
-                return productoDAO.GetAll()
+                return productoDAO.GetAllOrFiltered(activo: true)
                                   .OrderBy(p => p.Modelo)
                                   .ThenBy(p => p.Talle)
                                   .ToList();

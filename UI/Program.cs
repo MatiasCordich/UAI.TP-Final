@@ -41,9 +41,8 @@ namespace UI
                 UsuarioDAO usuarioDAO = new UsuarioDAO();
                 RolDAO rolDAO = new RolDAO();
 
-                /* Si ya hay usuarios no hace nada */
-                if (usuarioDAO.GetFiltered().Count > 0)
-                    return;
+                /* Manager que crea el árbol de permisos (patrón Composite) y se lo asigna a los roles. */
+                ComponenteManager componenteManager = new ComponenteManager();
 
                 /* Crea los roles si no existen */
                 if (rolDAO.GetAll().Count == 0)
@@ -54,6 +53,16 @@ namespace UI
                     rolDAO.Insert(new Rol { Nombre = "EncargadoCompras" });
                     rolDAO.Insert(new Rol { Nombre = "EncargadoInventario" });
                 }
+
+                /* Crea el árbol de permisos si todavía no existe y se lo asigna a cada rol.
+                   Se ejecuta ANTES de verificar los usuarios para que también funcione cuando el sistema
+                   ya estaba en uso y los roles todavía no tenían permisos. Es seguro ejecutarlo
+                   en cada arranque porque no duplica nada. */
+                componenteManager.InicializarComponentes();
+
+                /* Si ya hay usuarios no hace nada más */
+                if (usuarioDAO.GetAllOrFiltered().Count > 0)
+                    return;
 
                 /* Crea el usuario Dueño inicial */
                 Usuario dueno = new Usuario
@@ -71,7 +80,7 @@ namespace UI
                 MessageBox.Show(
                     "Sistema iniciado por primera vez.\n\n" +
                     "Usuario: JPEREZ\n" +
-                    "Contraseña: Admin123!\n\n" ,
+                    "Contraseña: Admin123!\n\n",
                     "Inicialización del sistema",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);

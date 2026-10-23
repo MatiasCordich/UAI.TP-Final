@@ -43,7 +43,7 @@ namespace BLL
             try
             {
                 /* Obtiene una lista completa o filtrada de los usuarios del XML. */
-                return usuarioDAO.GetFiltered(nombreUsuario, idRol, activo );
+                return usuarioDAO.GetAllOrFiltered(nombreUsuario, idRol, activo );
             }
             catch (Exception ex)
             {
@@ -285,7 +285,7 @@ namespace BLL
         private bool EsUnicoDueno(int idUsuario)
         {
             /* Obtiene todos los usuarios que sean activos y tengan el rol de "Dueño" */
-            List<Usuario> todos = usuarioDAO.GetFiltered(idRol: IdRolDueno, activo: true);
+            List<Usuario> todos = usuarioDAO.GetAllOrFiltered(idRol: IdRolDueno, activo: true);
 
             /* Cuenta cuántos Dueños activos hay excluyendo al usuario en cuestión. */
             int cantidadDuenos = 0;
@@ -317,7 +317,7 @@ namespace BLL
             string nombreUsuarioBase = primerLetraNombre + primerApellido;
 
             /* Obtiene todos los usuarios para verificar duplicados */
-            List<Usuario> todos = usuarioDAO.GetFiltered();
+            List<Usuario> todos = usuarioDAO.GetAllOrFiltered();
 
             /* Verifica si el nombre base ya existe */
             bool existe = todos.Exists(u => u.NombreUsuario == nombreUsuarioBase);

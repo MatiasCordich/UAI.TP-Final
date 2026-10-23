@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DAO\ComponenteDAO.cs" />
     <Compile Include="DAO\ConciliacionDiariaDAO.cs" />
     <Compile Include="DAO\AlertaStockDAO.cs" />
     <Compile Include="DAO\AjusteStockDAO.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="ORM\PedidoProductoORM.cs" />
     <Compile Include="ORM\PedidoCompraORM.cs" />
     <Compile Include="ORM\CambioCalzadoORM.cs" />
+    <Compile Include="ORM\ComponenteORM.cs" />
     <Compile Include="ORM\VentaProductoORM.cs" />
     <Compile Include="ORM\VentaORM.cs" />
     <Compile Include="ORM\ProductoORM.cs" />

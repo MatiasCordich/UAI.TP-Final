@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ComponenteManager.cs" />
     <Compile Include="ClienteManager.cs" />
     <Compile Include="CompraManager.cs" />
     <Compile Include="CuponFidelizacionManager.cs" />

@@ -20,22 +20,25 @@ namespace DAL.DAO
         /* Instancia del ORM de roles para cargar el rol del usuario */
         private RolORM rolOrm = new RolORM();
 
-         /* -----------------------------------------------------------------------------------------------------
-         * Función: GetFiltered
-         * Descripción: Obtiene TODOS los usuarios.
-         *              A su vez tiene parámetros opcionales si se quiere filtrar la búsqueda. 
-         * Parámetros:
-         *              nombreUsuario → filtra por nombre de usuario (contiene)
-         *              idRol         → filtra por rol exacto
-         *              activo        → filtra por estado (true=activo, false=inactivo, null=todos)
-         -----------------------------------------------------------------------------------------------------*/
-        public List<Usuario> GetFiltered(string nombreUsuario = null, int? idRol = null, bool? activo = null)
+        /* Instancia del ORM de componentes para cargar el árbol de permisos del rol (patrón Composite) */
+        private ComponenteORM componenteOrm = new ComponenteORM();
+
+        /* -----------------------------------------------------------------------------------------------------
+        * Función: GetFiltered
+        * Descripción: Obtiene TODOS los usuarios.
+        *              A su vez tiene parámetros opcionales si se quiere filtrar la búsqueda. 
+        * Parámetros:
+        *              nombreUsuario → filtra por nombre de usuario (contiene)
+        *              idRol         → filtra por rol exacto
+        *              activo        → filtra por estado (true=activo, false=inactivo, null=todos)
+        -----------------------------------------------------------------------------------------------------*/
+        public List<Usuario> GetAllOrFiltered(string nombreUsuario = null, int? idRol = null, bool? activo = null)
         {
             try
             {
                 /* Obtiene todos los usuarios del XML sin filtrar */
                 List<Usuario> usuarios = orm.ObtenerTodos();
- 
+
                 /* Si se proporcionó un nombre de Usuario, se aplica el filtro. */
                 if (!string.IsNullOrEmpty(nombreUsuario))
                 {
@@ -43,25 +46,25 @@ namespace DAL.DAO
                         u => u.NombreUsuario.ToUpper()
                         .Contains(nombreUsuario.ToUpper())).ToList();
                 }
-                    
+
                 /* Si se propocionó algun Rol, se aplica el filtro */
                 if (idRol.HasValue)
                 {
                     usuarios = usuarios.Where(u => u.IdRol == idRol.Value).ToList();
                 }
-                    
+
                 /* Si se proporcionó algun estado, se aplica al filtro */
                 if (activo.HasValue)
                 {
                     usuarios = usuarios.Where(u => u.Activo == activo.Value).ToList();
                 }
-                    
+
                 /* Carga el rol de cada usuario */
                 foreach (Usuario u in usuarios)
                 {
                     u.Rol = rolOrm.ObtenerPorId(u.IdRol);
                 }
-                    
+
                 /* Devuelve los usuarios. */
                 return usuarios;
             }
@@ -71,11 +74,11 @@ namespace DAL.DAO
             }
         }
 
-         /* -----------------------------------------------------------------------------------------------------
-         * Función: GetById
-         * Descripción: Obtiene un usuario por su ID
-         * Parámetros: id → id del usuario. 
-         -----------------------------------------------------------------------------------------------------*/
+        /* -----------------------------------------------------------------------------------------------------
+        * Función: GetById
+        * Descripción: Obtiene un usuario por su ID
+        * Parámetros: id → id del usuario. 
+        -----------------------------------------------------------------------------------------------------*/
         public Usuario GetById(int id)
         {
             try
@@ -85,7 +88,7 @@ namespace DAL.DAO
 
                 /* Si no existe, devuelve null. */
                 if (usuario == null) { return null; }
-                    
+
                 /* Carga el rol del usuario */
                 usuario.Rol = rolOrm.ObtenerPorId(usuario.IdRol);
 
@@ -100,6 +103,7 @@ namespace DAL.DAO
         /* -----------------------------------------------------------------------------------------------------
         * Función: GetByUsername
         * Descripción: Busca un usuario por su nombre de usuario. 
+        *              Es el que usa el login, por eso además del rol carga el árbol de permisos del rol.
         * Parámetros: nombreUsuario → nombre del usuario registrado. 
         -----------------------------------------------------------------------------------------------------*/
         /* Busca un usuario por su nombre de usuario - usado en el login (Desafío I) */
@@ -117,6 +121,14 @@ namespace DAL.DAO
 
                 /* Carga el rol del usuario */
                 usuario.Rol = rolOrm.ObtenerPorId(usuario.IdRol);
+
+                /* Si el rol existe y tiene permisos asignados (IdComponente distinto de 0),
+                   carga también su Composite raíz con todo el árbol de permisos adentro.
+                   Con eso la UI puede preguntar: usuario.Rol.Componente.Contains("Nueva Venta") */
+                if (usuario.Rol != null && usuario.Rol.IdComponente != 0)
+                {
+                    usuario.Rol.Componente = componenteOrm.ObtenerPorId(usuario.Rol.IdComponente);
+                }
 
                 return usuario;
             }

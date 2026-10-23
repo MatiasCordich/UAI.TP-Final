@@ -92,29 +92,29 @@ namespace BLL.SECURITY
             }
         }
 
-         /* -----------------------------------------------------------------------------------------------------
-         * Función: LoginParcial
-         * Descripción: Autentica al usuario pero sin guardarlo en sesión.
-         *              Se usa cuando el usuario debe cambiar la clave antes de ingresar.
-         *              Devuelve el usuario para que formulario de cambiar clave pueda operar.
-         * Parámetros: nombre de usuario y contraseña en texto plano.
-         * Retorna: el usuario autenticado sin guardarlo en sesión.
-         -----------------------------------------------------------------------------------------------------*/
+        /* -----------------------------------------------------------------------------------------------------
+        * Función: LoginParcial
+        * Descripción: Autentica al usuario pero sin guardarlo en sesión.
+        *              Se usa cuando el usuario debe cambiar la clave antes de ingresar.
+        *              Devuelve el usuario para que formulario de cambiar clave pueda operar.
+        * Parámetros: nombre de usuario y contraseña en texto plano.
+        * Retorna: el usuario autenticado sin guardarlo en sesión.
+        -----------------------------------------------------------------------------------------------------*/
         public Usuario LoginParcial(string nombreUsuario, string contrasena)
         {
             try
             {
                 /* Busca el usuario por nombre de usuario */
                 Usuario usuario = usuarioDAO.GetByUsername(nombreUsuario);
- 
+
                 /* Verifica que el usuario exista. */
                 if (usuario == null)
                     throw new Exception("El usuario no existe en el sistema.");
- 
+
                 /* Valida que la contraseña sea la correcta. */
                 if (!EncryptService.VerificarClave(contrasena, usuario.Clave))
                     throw new Exception("Contraseña incorrecta.");
- 
+
                 /* Devuelve el usuario sin guardarlo en sesión */
                 return usuario;
             }
@@ -141,6 +141,31 @@ namespace BLL.SECURITY
         {
             /* Se setea el usuario actual a null. */
             UsuarioActual = null;
+        }
+
+        /* -----------------------------------------------------------------------------------------------------
+         * Función: TienePermiso
+         * Descripción: Indica si el usuario logueado puede realizar la acción indicada.
+         *              Le pregunta al Composite raíz de su rol si incluye ese permiso (patrón Composite).
+         * Parámetros: nombreLeaf → nombre del permiso. Se usan las constantes de la clase NombresLeaf.
+         * Retorna: true si tiene permiso, false si no.
+         -----------------------------------------------------------------------------------------------------*/
+        public bool TienePermiso(string nombreLeaf)
+        {
+            /* Si no hay un usuario logueado, no tiene ningún permiso. */
+            if (UsuarioActual == null)
+                return false;
+
+            /* Se obtiene el Composite raíz del rol del usuario. */
+            Componente permisos = UsuarioActual.Rol?.Componente;
+
+            /* Si el rol no tiene árbol de permisos asignado, no tiene ningún permiso. */
+            if (permisos == null)
+                return false;
+
+            /* Se le pregunta al Composite raíz si incluye el permiso.
+               No importa cuántos niveles tenga el árbol: Contain() lo recorre solo. */
+            return permisos.Contain(nombreLeaf);
         }
 
         /* -----------------------------------------------------------------------------------------------------
@@ -270,13 +295,13 @@ namespace BLL.SECURITY
             }
         }
 
-         /* -----------------------------------------------------------------------------------------------------
-         * Función: ResetearClave
-         * Descripción: El Administrador resetea la clave de un usuario generando una nueva automática.
-         *              El usuario deberá cambiarla en su próximo ingreso.
-         * Parámetros: ID del usuario al que se le resetea la clave.
-         * Retorna: nueva clave temporal en texto plano para que el admin la comunique.
-         -----------------------------------------------------------------------------------------------------*/
+        /* -----------------------------------------------------------------------------------------------------
+        * Función: ResetearClave
+        * Descripción: El Administrador resetea la clave de un usuario generando una nueva automática.
+        *              El usuario deberá cambiarla en su próximo ingreso.
+        * Parámetros: ID del usuario al que se le resetea la clave.
+        * Retorna: nueva clave temporal en texto plano para que el admin la comunique.
+        -----------------------------------------------------------------------------------------------------*/
         public string ResetearClave(int idUsuario)
         {
             try
@@ -285,19 +310,19 @@ namespace BLL.SECURITY
                 Usuario usuario = usuarioDAO.GetById(idUsuario);
                 if (usuario == null)
                     throw new Exception("El usuario no existe.");
- 
+
                 /* Genera la nueva clave automática */
                 string nuevaClaveTemporal = GenerarClaveAutomatica();
- 
+
                 /* Hashea y guarda la nueva clave */
                 usuario.Clave = EncryptService.HashClave(nuevaClaveTemporal);
- 
+
                 /* Obliga al usuario a cambiar la clave en el próximo ingreso */
                 usuario.DebeCambiarClave = true;
- 
+
                 /* Guarda los cambios en el XML */
                 usuarioDAO.Update(usuario);
- 
+
                 /* Devuelve la clave temporal para que el Administardor la comunique */
                 return nuevaClaveTemporal;
             }

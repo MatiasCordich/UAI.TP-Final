@@ -23,7 +23,12 @@ namespace MAPPER
             return new Rol
             {
                 Id = (int)nodo.Element("Id"),
-                Nombre = (string)nodo.Element("Nombre")
+                Nombre = (string)nodo.Element("Nombre"),
+
+                /* (int?) permite que el campo no exista en el XML sin dar error.
+                   "?? 0" significa: si no existe, usar 0 (rol sin permisos asignados todavía).
+                   Así el roles.xml viejo, que no tiene este campo, sigue leyéndose bien */
+                IdComponente = (int?)nodo.Element("IdComponente") ?? 0
             };
         }
 
@@ -32,8 +37,13 @@ namespace MAPPER
         {
             return new XElement("Rol",
                 new XElement("Id", entidad.Id),
-                new XElement("Nombre", entidad.Nombre)
+                new XElement("Nombre", entidad.Nombre),
+
+                /* NUEVO. Guarda el Id del Composite raíz del rol */
+                new XElement("IdComponente", entidad.IdComponente)
             );
         }
     }
+
+}
 }
