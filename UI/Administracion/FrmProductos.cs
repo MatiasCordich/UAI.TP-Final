@@ -361,7 +361,7 @@ namespace UI.Administracion
             try
             {
                 /* Obtiene todos los proveedores activos */
-                List<Proveedor> proveedores = proveedorDAO.GetAll();
+                List<Proveedor> proveedores = proveedorDAO.GetAllOrFiltered(activo: true);
 
                 /* Configura el ComboBox para mostrar el nombre y guardar el ID */
                 cmbProveedor.DisplayMember = "Nombre";
