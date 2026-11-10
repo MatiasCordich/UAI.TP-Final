@@ -25,12 +25,12 @@ namespace BLL
          * Descripción: Obtiene todos los proveedores activos con sus datos desencriptados.
          * Retorna: lista de proveedores.
          -----------------------------------------------------------------------------------------------------*/
-        public List<Proveedor> ListarProveedores()
+        public List<Proveedor> ListarProveedoresOFiltrados(string nombre = null, bool? activo = null)
         {
             try
             {
-                /* Obtiene todos los proveedores activos del XML */
-                List<Proveedor> proveedores = proveedorDAO.GetAll();
+                /* Obtiene los proveedores del XML aplicando los filtros opcionales */
+                List<Proveedor> proveedores = proveedorDAO.GetAllOrFiltered(nombre, activo);
 
                 /* Desencripta el CUIT de cada proveedor antes de mostrarlo */
                 foreach (Proveedor p in proveedores)
@@ -80,13 +80,9 @@ namespace BLL
                 /* Se realizan las validaciones correspondientes para insertar un proveedor. */
                 ValidarProveedor(proveedor);
 
-                /* Se verifica que no exista un proveedor con el mismo CUIT (encriptado para comparar) */
-                List<Proveedor> todos = proveedorDAO.GetAll();
-                foreach (Proveedor p in todos)
-                {
-                    if (EncryptService.Desencriptar(p.Cuit) == proveedor.Cuit)
-                        throw new Exception("Ya existe un proveedor con ese CUIT.");
-                }
+                /* Se verifica que no exista otro proveedor (activo o inactivo) con el mismo CUIT */
+                if (ExisteCuit(proveedor.Cuit, 0))
+                    throw new Exception("Ya existe un proveedor con ese CUIT.");
 
                 /* Encripta el CUIT antes de guardar en el XML */
                 proveedor.Cuit = EncryptService.Encriptar(proveedor.Cuit);
@@ -119,8 +115,16 @@ namespace BLL
                 if (!existente.Activo)
                     throw new Exception("No se puede modificar un proveedor desactivado.");
 
+                /* La deuda total es la cuenta corriente del proveedor: la modifican los pedidos y los pagos,
+                   nunca el formulario de proveedores. Se conserva el valor que ya tiene guardado. */
+                proveedor.DeudaTotal = existente.DeudaTotal;
+
                 /* Se realizan las validaciones correspondiente a los datos del proveedor. */
                 ValidarProveedor(proveedor);
+
+                /* Se verifica que el CUIT no pertenezca a otro proveedor */
+                if (ExisteCuit(proveedor.Cuit, proveedor.Id))
+                    throw new Exception("Ya existe otro proveedor con ese CUIT.");
 
                 /* Encripta el CUIT antes de actualizar en el XML */
                 proveedor.Cuit = EncryptService.Encriptar(proveedor.Cuit);
@@ -171,6 +175,11 @@ namespace BLL
                 if (!proveedor.Activo)
                     throw new Exception("El proveedor ya está desactivado.");
 
+                /* No se puede desactivar un proveedor con deuda pendiente: al no estar activo dejaría de
+                   aparecer en el módulo de pagos y la deuda no se podría saldar. */
+                if (proveedor.DeudaTotal > 0)
+                    throw new Exception("No se puede desactivar un proveedor con deuda pendiente. Primero debe saldarse.");
+
                 /* Baja lógica: el proveedor queda en el XML pero con Activo = false */
                 proveedorDAO.Deactivate(id);
             }
@@ -209,6 +218,37 @@ namespace BLL
         }
 
         /* -----------------------------------------------------------------------------------------------------
+         * Función: ExisteCuit
+         * Descripción: Verifica si ya existe un proveedor (activo o inactivo) con el mismo CUIT.
+         *              Compara sin tener en cuenta los guiones, para que 20-12345678-9 y 20123456789
+         *              se consideren el mismo CUIT.
+         * Parámetros: cuit en texto plano e id del proveedor que se debe excluir de la búsqueda
+         *             (el propio proveedor al modificar; 0 al registrar uno nuevo).
+         * Retorna: true si el CUIT ya está en uso por otro proveedor.
+         -----------------------------------------------------------------------------------------------------*/
+        private bool ExisteCuit(string cuit, int idExcluido)
+        {
+            /* Se quitan los guiones del CUIT ingresado para poder compararlo. */
+            string cuitBuscado = cuit.Replace("-", "");
+
+            /* Se recorren todos los proveedores, activos e inactivos. */
+            foreach (Proveedor p in proveedorDAO.GetAllOrFiltered())
+            {
+                /* El proveedor excluido (él mismo al modificar) no cuenta como duplicado. */
+                if (p.Id == idExcluido)
+                    continue;
+
+                /* El CUIT está encriptado en el XML: se desencripta para compararlo. */
+                if (EncryptService.Desencriptar(p.Cuit).Replace("-", "") == cuitBuscado)
+                    return true;
+            }
+
+            return false;
+        }
+
+
+
+        /* -----------------------------------------------------------------------------------------------------
          * Función: ValidarProveedor
          * Descripción: Centraliza todas las validaciones de negocio para alta y modificación.
          *              Se llama tanto en RegistrarProveedor como en ModificarProveedor.
@@ -216,11 +256,11 @@ namespace BLL
          -----------------------------------------------------------------------------------------------------*/
         private void ValidarProveedor(Proveedor proveedor)
         {
-            /* Nombre obligatorio y solo letras/espacios */
+            /* Nombre obligatorio: letras, números, espacios y los símbolos . , & - */
             if (string.IsNullOrEmpty(proveedor.Nombre))
                 throw new Exception("El nombre es obligatorio.");
-            if (!Regex.IsMatch(proveedor.Nombre, @"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$"))
-                throw new Exception("El nombre solo puede contener letras y espacios.");
+            if (!Regex.IsMatch(proveedor.Nombre, @"^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.,&-]+$"))
+                throw new Exception("El nombre solo puede contener letras, números, espacios y los símbolos . , & -");
 
             /* CUIT obligatorio con formato válido: XX-XXXXXXXX-X o 11 dígitos sin guiones */
             if (string.IsNullOrEmpty(proveedor.Cuit))

@@ -19,11 +19,29 @@ namespace DAL.DAO
     {
         private ProveedorORM orm = new ProveedorORM();
 
-        public List<Proveedor> GetAll()
+        public List<Proveedor> GetAllOrFiltered(string nombre = null, bool? activo = null)
         {
             try
             {
-                return orm.ObtenerTodos().Where(p => p.Activo).ToList();
+                /* Obtiene todos los proveedores del XML sin filtrar */
+                List<Proveedor> proveedores = orm.ObtenerTodos();
+
+                /* Si se proporcionó un nombre, se aplica el filtro (sin distinguir mayúsculas) */
+                if (!string.IsNullOrEmpty(nombre))
+                {
+                    proveedores = proveedores.Where(
+                        p => p.Nombre.ToUpper()
+                        .Contains(nombre.ToUpper())).ToList();
+                }
+
+                /* Si se proporcionó un estado, se aplica el filtro */
+                if (activo.HasValue)
+                {
+                    proveedores = proveedores.Where(p => p.Activo == activo.Value).ToList();
+                }
+
+                /* Devuelve los proveedores. */
+                return proveedores;
             }
             catch (Exception ex)
             {
