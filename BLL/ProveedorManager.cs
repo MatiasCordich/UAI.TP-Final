@@ -35,6 +35,8 @@ namespace BLL
                 /* Desencripta el CUIT de cada proveedor antes de mostrarlo */
                 foreach (Proveedor p in proveedores)
                     p.Cuit = EncryptService.Desencriptar(p.Cuit);
+
+                /* Retorna la lista de proveedores */
                 return proveedores;
             }
             catch (Exception ex)
